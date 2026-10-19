@@ -32,7 +32,7 @@ Customer ─▶ /  (public/bioground/index.html — Korean, English, Spanish, Vi
 ```bash
 nvm use                       # Node 24
 npm install
-cp .env.example .env.local    # fill DATABASE_URL, DIRECT_URL, AUTH_SECRET
+cp .env.example .env.local    # fill DATABASE_URL, DATABASE_URL_UNPOOLED, AUTH_SECRET
 npx prisma migrate deploy
 npm run staff:create -- you@example.com "Your Name" ADMIN
 npm run dev                   # http://localhost:3000 (landing) and /admin
@@ -40,17 +40,19 @@ npm run dev                   # http://localhost:3000 (landing) and /admin
 
 ## Go live (Vercel)
 
-1. **Database:** create a Neon (or Supabase) Postgres; put the pooled URL in
-   `DATABASE_URL` and the direct URL in `DIRECT_URL`.
-2. **Upstash Redis:** required in production for rate limiting
-   (`UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`).
-3. **Resend:** `RESEND_API_KEY`, `EMAIL_FROM`, and `BOOKING_NOTIFY_EMAIL` for
-   new-booking alerts.
-4. **Vercel:** import this repo, set the variables from `.env.example`
-   (including `AUTH_SECRET` and `NEXT_PUBLIC_APP_URL`). `vercel.json` runs
-   `prisma migrate deploy` before each build.
-5. Create staff logins with `npm run staff:create` against the production
-   database.
+1. **Vercel → Add New → Project** → import this repo. Before deploying, add
+   `AUTH_SECRET` (`openssl rand -base64 32`). Optional: `BOOKING_NOTIFY_EMAIL`,
+   `RESEND_API_KEY`, `EMAIL_FROM`, `BOOKING_SLOT_CAPACITY` (default 2),
+   `NEXT_PUBLIC_APP_URL` (defaults to the Vercel production domain).
+2. **Storage → Neon** (Create database, connect to this project). It sets
+   `DATABASE_URL` and `DATABASE_URL_UNPOOLED`; `vercel.json` runs
+   `prisma migrate deploy` before each build, so tables are created on deploy.
+3. **Storage → Upstash for Redis** (connect to this project). It sets
+   `KV_REST_API_URL` / `KV_REST_API_TOKEN`, which the rate limiter reads. The
+   booking API refuses traffic in production without it.
+4. **Redeploy** so the build sees the new variables.
+5. Create staff logins: `npm run staff:create` with `DATABASE_URL` pointing at
+   the production database.
 6. Point the domain at Vercel and make one real test booking end to end.
 
 ## Checks

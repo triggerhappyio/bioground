@@ -7,7 +7,7 @@ datasource db {
   url       = env("DATABASE_URL")
   // Neon/Supabase put a pooler behind DATABASE_URL; `prisma migrate` needs a
   // direct connection. If your provider doesn't pool, use the same value.
-  directUrl = env("DIRECT_URL")
+  directUrl = env("DATABASE_URL_UNPOOLED")
 }
 
 // ─────────────────────────────────────────────────────────────────────────

@@ -336,6 +336,10 @@ export function allowedOrigins(): string[] {
     .filter(Boolean);
   const app = (process.env.NEXT_PUBLIC_APP_URL || "").trim().replace(/\/$/, "");
   if (app) list.push(app);
+  // On Vercel, the production domain (custom domain if set, else *.vercel.app)
+  // is allowed without extra configuration.
+  const vercelProd = (process.env.VERCEL_PROJECT_PRODUCTION_URL || "").trim().replace(/\/$/, "");
+  if (vercelProd) list.push(`https://${vercelProd}`);
   return Array.from(new Set(list));
 }
 

@@ -1,6 +1,7 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import {
   addMonthsToDate,
+  allowedOrigins,
   addMonthsToMonth,
   makeBookingCode,
   parseBookingInput,
@@ -250,5 +251,27 @@ describe("toDashboardRecord — export for the claude.ai store dashboard", () =>
       expect(back.data.purpose).toBe("EARLY_CHECK");
       expect(back.data.selfCheck?.flags).toEqual(["f_flat"]);
     }
+  });
+});
+
+describe("allowedOrigins", () => {
+  const keys = ["BOOKING_ALLOWED_ORIGINS", "NEXT_PUBLIC_APP_URL", "VERCEL_PROJECT_PRODUCTION_URL"] as const;
+  const saved: Record<string, string | undefined> = {};
+  beforeEach(() => keys.forEach((k) => { saved[k] = process.env[k]; delete process.env[k]; }));
+  afterEach(() => keys.forEach((k) => { if (saved[k] === undefined) delete process.env[k]; else process.env[k] = saved[k]; }));
+
+  it("combines the explicit list, the app URL and the Vercel production domain, deduped", () => {
+    process.env.BOOKING_ALLOWED_ORIGINS = "https://bioground.com/, https://www.bioground.com";
+    process.env.NEXT_PUBLIC_APP_URL = "https://bioground.com";
+    process.env.VERCEL_PROJECT_PRODUCTION_URL = "bioground.vercel.app";
+    expect(allowedOrigins()).toEqual([
+      "https://bioground.com",
+      "https://www.bioground.com",
+      "https://bioground.vercel.app"
+    ]);
+  });
+
+  it("is empty when nothing is configured (same-origin requests still pass in the route)", () => {
+    expect(allowedOrigins()).toEqual([]);
   });
 });

@@ -56,7 +56,7 @@ CORS "simple request" (no preflight); the route parses the raw text as JSON.
 | `BOOKING_ALLOWED_ORIGINS` | Comma-separated extra origins allowed to POST (e.g. `https://bioground.com`). The site itself (same origin) always works. |
 | `BOOKING_NOTIFY_EMAIL` | Where new-booking alerts go (uses the existing Resend setup). Unset = no alert. |
 | `BOOKING_SLOT_CAPACITY` | Bookings per store per hourly slot. Default 2. |
-| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Required in production (rate limiting). |
+| `UPSTASH_REDIS_REST_URL` / `_TOKEN` | Required in production (rate limiting). `KV_REST_API_URL` / `KV_REST_API_TOKEN` from Vercel's Upstash integration also work. |
 
 Stores and time slots live in `lib/bookings.ts` (`BOOKING_STORES`,
 `BOOKING_SLOTS`). Adding a franchise store = one entry there plus the

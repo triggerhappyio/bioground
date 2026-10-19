@@ -1,5 +1,5 @@
 // Rate-limit abstraction for abuse-sensitive endpoints (login, registration,
-// checkout creation, email verification, sensitive mutations).
+// public booking endpoint).
 //
 // PRODUCTION: backed by Upstash Redis (@upstash/ratelimit) when
 // UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN are set — a real
@@ -34,8 +34,10 @@ function memoryRateLimit(key: string, limit: number, windowMs: number): Limiter 
 
 let redisClient: Redis | null = null;
 function getRedis(): Redis | null {
-  const url = process.env.UPSTASH_REDIS_REST_URL;
-  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Upstash's own names, or the KV_* names the Vercel Marketplace
+  // integration (Storage → Upstash for Redis) injects.
+  const url = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
   if (!url || !token) return null;
   if (!redisClient) redisClient = new Redis({ url, token });
   return redisClient;
@@ -54,7 +56,7 @@ function getUpstashLimiter(scope: string, limit: number, windowMs: number): Rate
     limiter = new Ratelimit({
       redis,
       limiter: Ratelimit.slidingWindow(limit, `${windowMs} ms`),
-      prefix: `jgp-ratelimit:${scope}`
+      prefix: `bioground-ratelimit:${scope}`
     });
     limiterCache.set(cacheKey, limiter);
   }
@@ -71,7 +73,7 @@ function getUpstashLimiter(scope: string, limit: number, windowMs: number): Rate
 export function assertRateLimiterConfigured(): void {
   if (process.env.NODE_ENV === "production" && !getRedis()) {
     throw new Error(
-      "Rate limiting is not configured for production: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN. " +
+      "Rate limiting is not configured for production: set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN (or connect Upstash for Redis in Vercel Storage, which sets KV_REST_API_URL / KV_REST_API_TOKEN). " +
         "Refusing to silently fall back to an in-memory limiter, which does not work correctly across serverless instances."
     );
   }
