@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  // Neon/Supabase put a pooler behind DATABASE_URL; `prisma migrate` needs a
+  // direct connection. If your provider doesn't pool, use the same value.
+  directUrl = env("DIRECT_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// STAFF — who can sign in to /admin. Created with `npm run staff:create`.
+// ─────────────────────────────────────────────────────────────────────────
+
+enum StaffRole {
+  STAFF // works bookings at a store
+  ADMIN // also sees every store and manages staff (via the script for now)
+}
+
+model StaffUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  passwordHash String
+  role         StaffRole @default(STAFF)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// FOOT-CHECK BOOKINGS — the BioGround landing page (public/bioground) books
+// a free 15-minute in-store foot structure + balance check.
+//
+// Health data rule: `selfCheck` (the customer's at-home self-check summary)
+// and `medicalReferralFlag` are ONLY ever written when the customer ticked
+// the separate health-information consent box (`healthConsent`). The API
+// strips them otherwise — see lib/bookings.ts parseBookingInput(). These
+// are wellness screening answers, not a diagnosis, and must never be used
+// for marketing.
+// ─────────────────────────────────────────────────────────────────────────
+
+enum BookingStatus {
+  BOOKED
+  ARRIVED
+  CHECKING
+  DONE
+  NO_SHOW
+  CANCELLED
+}
+
+enum BookingSource {
+  WEB
+  PHONE
+  WALKIN
+}
+
+enum BookingCustomerType {
+  NEW
+  RETURNING // already wears JGP Arch Built-in; rescans every 5 months
+}
+
+enum BookingPurpose {
+  REGULAR_RESCAN // the standard 5-month rescan + footprint comparison
+  EARLY_CHECK // before 5 months: new footprint print-out + explanation
+  WEAR_CONSULT // discomfort/questions while wearing
+}
+
+model Booking {
+  id              String  @id @default(cuid())
+  // Human-readable code shown to the customer, e.g. "BK-7F3K9Q".
+  code            String  @unique
+  // Id generated client-side by the landing page and sent with the request,
+  // so a retried/double-submitted booking is a no-op (unique constraint
+  // does the work, not application logic). Null for staff-entered bookings.
+  clientBookingId String? @unique
+
+  storeCode String // "KTOWN" | "BP" — see BOOKING_STORES in lib/bookings.ts
+  // Store-local wall-clock date/time (America/Los_Angeles), stored as text
+  // on purpose: a booking is "Tuesday at 10:00 at the store", not an
+  // instant, and must not shift if a server or browser timezone differs.
+  date      String // YYYY-MM-DD
+  time      String // HH:MM
+
+  status BookingStatus @default(BOOKED)
+  source BookingSource @default(WEB)
+
+  name           String
+  phone          String
+  phoneDigits    String // digits only, for lookup and rescan grouping
+  partyType      String  @default("self") // self | parent | family
+  lang           String  @default("ko") // consultation language
+  pageLang       String? // language the landing page was viewed in
+  contactMethod  String  @default("sms") // sms | call | kakao | whatsapp | zalo | wechat
+  contactConsent Boolean @default(false)
+
+  customerType    BookingCustomerType @default(NEW)
+  lastScanMonth   String? // YYYY-MM, returning customers only
+  nextRescanMonth String? // lastScanMonth + 5 months, computed server-side
+  purpose         BookingPurpose?
+  wearingModel    String?
+
+  healthConsent       Boolean   @default(false)
+  healthConsentAt     DateTime?
+  selfCheck           Json? // only with healthConsent; validated shape, see lib/bookings.ts
+  medicalReferralFlag Boolean   @default(false) // customer selected a "see a clinician first" item
+
+  staffNotes  String?
+  arrivedAt   DateTime?
+  completedAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([storeCode, date])
+  @@index([phoneDigits])
+  @@index([status])
+}

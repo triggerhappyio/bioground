@@ -1,0 +1,44 @@
+{
+  "name": "bioground",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "postinstall": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:migrate:deploy": "prisma migrate deploy",
+    "staff:create": "tsx scripts/create-staff.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.20.0",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.2",
+    "bcryptjs": "^3.0.3",
+    "next": "^16.3.1",
+    "next-auth": "^5.0.0-beta.32",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "resend": "^6.20.0"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/node": "^24.13.3",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.1",
+    "prisma": "^5.20.0",
+    "tsx": "^4.23.12",
+    "typescript": "^5",
+    "vitest": "^4.1.11"
+  }
+}

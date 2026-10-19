@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BioGround 매장 대시보드</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDEBE4; --surface:#F7F6F1; --raised:#FFFFFF; --fg:#15171C; --muted:#5B5E66; --line:#CBC7BC;
+  --acid:#C8F03C; --refer:#A3402A; --refer-bg:#F2E2DB; --ok:#2F6B3A;
+  --btn-bg:#15171C; --btn-fg:#F7F6F1;
+  --serif:"Hahmlet","Noto Serif KR","AppleMyungjo",serif;
+  --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",system-ui,sans-serif;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#121419; --surface:#1A1D23; --raised:#20242B; --fg:#ECEAE3; --muted:#A4A7AE; --line:#30343C;
+    --refer:#E4896D; --refer-bg:#2B1E1A; --ok:#8FD19A; --btn-bg:#ECEAE3; --btn-fg:#121419; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121419; --surface:#1A1D23; --raised:#20242B; --fg:#ECEAE3; --muted:#A4A7AE; --line:#30343C;
+  --refer:#E4896D; --refer-bg:#2B1E1A; --ok:#8FD19A; --btn-bg:#ECEAE3; --btn-fg:#121419; color-scheme:dark;
+}
+html{font-size:17px;scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+[hidden]{display:none !important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--serif);font-weight:600;line-height:1.25;margin:0}
+h2{font-size:1.45rem}
+h3{font-size:1.1rem}
+p{margin:.5em 0}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--fg);outline-offset:2px;box-shadow:0 0 0 6px var(--acid)}
+.muted{color:var(--muted)} .small{font-size:.86rem}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+
+.top{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:12px 18px;padding-top:12px;padding-bottom:12px}
+.brand{display:flex;align-items:center;gap:10px;margin-right:auto}
+.brand .zu{font-family:var(--serif);font-weight:700;font-size:1.8rem;line-height:1}
+.brand b{font-family:var(--serif);font-weight:600;font-size:1.1rem;display:block;line-height:1.1}
+.brand span.sub{font-size:.78rem;color:var(--muted);display:block}
+.seg{display:inline-flex;border:1.5px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;background:transparent;color:var(--fg);font:inherit;font-size:.9rem;min-height:42px;padding:0 14px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.datenav{display:flex;align-items:center;gap:6px}
+.datenav .d{font-family:var(--serif);font-weight:600;min-width:9.5em;text-align:center}
+.iconbtn{border:1.5px solid var(--line);background:transparent;color:var(--fg);border-radius:10px;min-width:42px;min-height:42px;font:inherit;cursor:pointer}
+.chip-sync{font-size:.8rem;padding:4px 10px;border-radius:999px;border:1.5px solid var(--line);color:var(--muted)}
+.chip-sync.on{border-color:var(--fg);color:var(--fg)}
+.tabs{display:flex;gap:4px;overflow-x:auto}
+.tabs button{border:0;border-bottom:3px solid transparent;background:none;color:var(--muted);font:inherit;font-weight:600;padding:10px 14px;min-height:46px;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--fg)}
+.tabs .badge{display:inline-block;min-width:1.5em;padding:0 6px;margin-left:6px;border-radius:999px;background:var(--refer);color:#fff;font-size:.75rem;line-height:1.5em;text-align:center}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:46px;padding:0 18px;border-radius:999px;border:0;background:var(--btn-bg);color:var(--btn-fg);font:inherit;font-weight:600;cursor:pointer}
+.btn.sec{background:transparent;color:var(--fg);border:1.5px solid var(--fg)}
+.btn.ghost{background:transparent;color:var(--fg);border:1.5px solid var(--line)}
+.btn.sm{min-height:38px;padding:0 13px;font-size:.88rem}
+.btn.danger{background:transparent;color:var(--refer);border:1.5px solid var(--refer)}
+.btn[disabled]{opacity:.4;cursor:not-allowed}
+.row-actions{display:flex;flex-wrap:wrap;gap:8px}
+
+.notice{border-left:4px solid var(--fg);background:var(--surface);padding:10px 14px;margin:14px 0;font-size:.92rem}
+.notice.warn{border-color:var(--refer);background:var(--refer-bg)}
+.statusline{font-family:var(--serif);font-size:1.25rem;margin:22px 0 4px;line-height:1.45}
+.statusline b{font-weight:700}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:14px 0 6px}
+.group-h{font-size:.92rem;font-weight:600;color:var(--muted);margin:26px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.empty{color:var(--muted);padding:14px 0}
+
+.visit{display:grid;grid-template-columns:4.6rem 1fr auto;gap:14px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.visit .t{font-family:var(--serif);font-weight:700;font-size:1.2rem;font-variant-numeric:tabular-nums}
+.visit .n{font-weight:600;font-size:1.05rem}
+.visit .meta{font-size:.85rem;color:var(--muted)}
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{font-size:.78rem;padding:1px 9px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.tag.flag{border-color:var(--refer);color:var(--refer);font-weight:600}
+.pill{display:inline-block;font-size:.78rem;font-weight:600;padding:2px 10px;border-radius:999px;border:1.5px solid var(--line);white-space:nowrap}
+.pill.booked{border-color:var(--line);color:var(--muted)}
+.pill.arrived{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.pill.checking{background:var(--acid);color:#15171C;border-color:var(--acid)}
+.pill.done{border-color:var(--fg);color:var(--fg)}
+.pill.noshow,.pill.cancelled{border-color:var(--refer);color:var(--refer)}
+@media (max-width:640px){.visit{grid-template-columns:3.6rem 1fr}.visit .row-actions{grid-column:1 / -1}}
+
+/* drawer */
+.drawer{position:fixed;inset:0;z-index:40;display:flex;justify-content:flex-end;background:rgba(10,12,15,.42)}
+.panel{width:min(640px,100%);height:100%;background:var(--bg);display:flex;flex-direction:column;border-left:1px solid var(--line)}
+.panel-h{padding:calc(14px + env(safe-area-inset-top,0px)) 20px 10px;border-bottom:1px solid var(--line);background:var(--bg)}
+.panel-h .who{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.panel-h .nm{font-family:var(--serif);font-size:1.35rem;font-weight:700}
+.steps{display:flex;gap:4px;margin-top:12px;overflow-x:auto}
+.steps button{flex:none;border:1.5px solid var(--line);background:transparent;color:var(--muted);border-radius:8px;font:inherit;font-size:.82rem;min-height:38px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.steps button[aria-current="step"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.steps button.visited{color:var(--fg);border-color:var(--fg)}
+.panel-b{flex:1;overflow:auto;padding:16px 20px 24px}
+.panel-f{display:flex;justify-content:space-between;gap:10px;padding:12px 20px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line);background:var(--bg)}
+.script{font-family:var(--serif);font-size:1.08rem;line-height:1.5;padding:12px 16px;border-left:4px solid var(--acid);background:var(--surface);margin:0 0 16px}
+.script small{display:block;font-family:var(--sans);font-size:.76rem;color:var(--muted);margin-bottom:2px}
+.field{display:block;margin-top:14px}
+.field > span{display:block;font-weight:600;margin-bottom:6px;font-size:.95rem}
+input[type=text],input[type=tel],input[type=number],input[type=date],select,textarea{width:100%;min-height:46px;padding:8px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit}
+textarea{min-height:76px;resize:vertical}
+.opts{display:flex;flex-wrap:wrap;gap:8px}
+.opt{border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:10px;min-height:46px;padding:0 14px;font:inherit;cursor:pointer}
+.opt[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.qrow{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.qrow p{margin:0;flex:1}
+.yn{display:flex;gap:6px;flex:none}
+.yn button{min-width:62px;min-height:44px;border:1.5px solid var(--line);background:var(--surface);color:var(--fg);border-radius:8px;font:inherit;cursor:pointer}
+.yn button[aria-pressed="true"]{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+.flagbox{border-left:5px solid var(--refer);background:var(--refer-bg);padding:12px 14px;border-radius:0 8px 8px 0;margin:14px 0}
+.flagbox b{color:var(--refer)}
+.flagbox ul{margin:6px 0 0;padding-left:1.1em}
+.stance{display:grid;grid-template-columns:1.6rem 1fr;gap:10px;padding:12px 0;border-bottom:1px solid var(--line)}
+.stance .k{font-family:var(--serif);font-weight:700;font-size:1.2rem}
+.stance .ctl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;align-items:center}
+.stance .ctl input{width:84px;min-height:42px}
+.stance.skip .nm{color:var(--muted);text-decoration:line-through}
+.scorebox{display:flex;align-items:baseline;gap:14px;margin:16px 0 6px;flex-wrap:wrap}
+.scorebox .s{font-family:var(--serif);font-weight:700;font-size:3.2rem;line-height:1;font-variant-numeric:tabular-nums}
+.scorebox .b{font-family:var(--serif);font-size:1.3rem}
+.tryrow{display:grid;grid-template-columns:1.2fr .8fr 1.4fr auto;gap:8px;align-items:center;margin-top:8px}
+@media (max-width:560px){.tryrow{grid-template-columns:1fr 1fr}.tryrow input{grid-column:1 / -1}}
+.check{display:flex;gap:10px;align-items:flex-start;margin-top:12px}
+.check input{width:22px;height:22px;margin-top:3px;accent-color:var(--fg);flex:none}
+.sumtable{width:100%;border-collapse:collapse;margin-top:8px;font-size:.92rem}
+.sumtable th,.sumtable td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+.sumtable th{color:var(--muted);font-weight:600;width:38%}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(10,12,15,.5);padding:16px}
+.dialog{width:min(560px,100%);max-height:92vh;overflow:auto;background:var(--bg);border-radius:10px;padding:20px;border:1px solid var(--line)}
+.dialog .act{display:flex;justify-content:flex-end;gap:10px;margin-top:18px;flex-wrap:wrap}
+
+/* result card */
+.card{border:2px solid var(--fg);border-radius:8px;padding:20px;background:var(--raised)}
+.card .ch{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.card .zu{font-family:var(--serif);font-weight:700;font-size:1.6rem}
+.card .fid{font-family:var(--serif);font-weight:600;letter-spacing:.05em}
+.card .big{font-family:var(--serif);font-weight:700;font-size:3rem;line-height:1;margin-top:12px}
+.card dl{display:grid;grid-template-columns:7em 1fr;gap:6px 12px;margin:14px 0 0;font-size:.92rem}
+.card dt{color:var(--muted)} .card dd{margin:0}
+.card .disc{font-size:.78rem;color:var(--muted);margin-top:14px;border-top:1px solid var(--line);padding-top:8px}
+
+/* follow-ups & kpi */
+.fu{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.fu .due{font-size:.85rem}
+.fu .due.over{color:var(--refer);font-weight:600}
+.kpitable{width:100%;border-collapse:collapse;margin-top:10px}
+.kpitable th,.kpitable td{padding:11px 8px;border-bottom:1px solid var(--line);text-align:left}
+.kpitable th{font-size:.82rem;color:var(--muted);font-weight:600}
+.kpitable td.v{font-family:var(--serif);font-weight:700;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.st-ok{color:var(--ok);font-weight:600} .st-no{color:var(--refer);font-weight:600}
+.bars{display:grid;gap:10px;margin-top:10px}
+.barrow{display:grid;grid-template-columns:8.5em 1fr 3.5em;gap:10px;align-items:center;font-size:.92rem}
+.bar{height:12px;background:var(--line);border-radius:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--fg)}
+.storesel{min-height:42px;min-width:11em;max-width:60vw;border:1.5px solid var(--fg);border-radius:10px;background:var(--surface);color:var(--fg);font:inherit;font-weight:600;padding:0 10px}
+.fpgrid{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.fpitem{width:118px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);padding:6px;font-size:.76rem;color:var(--muted);text-align:center}
+.fpitem button.th{display:block;width:100%;height:124px;border:0;padding:0;background:var(--raised);cursor:zoom-in;border-radius:4px;overflow:hidden}
+.fpitem img{width:100%;height:100%;object-fit:cover;display:block}
+.fpitem .pdf{display:flex;align-items:center;justify-content:center;height:100%;font-weight:700;color:var(--fg)}
+.fpitem .del{margin-top:4px;border:0;background:none;color:var(--refer);font:inherit;font-size:.76rem;cursor:pointer;min-height:30px}
+.fpup{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.fpup label.btn{position:relative;overflow:hidden}
+.fpup input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.storecard2{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.storecard2.off{opacity:.55}
+.prev{width:100%;border-collapse:collapse;font-size:.84rem;margin-top:10px}
+.prev th,.prev td{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.prev tr.bad td{color:var(--refer)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+@media (max-width:520px){.grid2{grid-template-columns:1fr}}
+.foot{font-size:.8rem;color:var(--muted);border-top:1px solid var(--line);margin-top:40px;padding:14px 0 28px}
+
+@media print{
+  body *{visibility:hidden !important}
+  #printCard, #printCard *{visibility:visible !important}
+  #printCard{position:absolute;left:0;top:0;width:100%}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+.webbox{margin:12px 0;padding:12px 14px;border:1.5px solid var(--line);border-left:5px solid var(--fg);border-radius:10px}
+.webbox .sumtable{margin-top:8px}
+.tag.ret{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="zu" aria-hidden="true">足</span><span><b>BioGround 매장 대시보드</b><span class="sub">× JGP 아치빌트인</span></span></div>
+    <select class="storesel" id="storeSel" aria-label="매장 선택"></select>
+    <div class="datenav"><button class="iconbtn" data-act="dPrev" aria-label="이전 날">‹</button><span class="d" id="dLabel"></span><button class="iconbtn" data-act="dNext" aria-label="다음 날">›</button><button class="btn ghost sm" data-act="dToday">오늘</button></div>
+    <span class="chip-sync" id="sync">연결 중</span>
+  </div>
+  <div class="wrap"><nav class="tabs" role="tablist" id="tabs"></nav></div>
+</header>
+<main class="wrap" id="app"></main>
+<footer class="wrap foot">고객 기록은 매장 담당자 권한(Contributor 이상)이 있는 사람만 볼 수 있어요. 이 대시보드의 점검 기록은 웰니스 기록이며 의료 진단이 아닙니다. Balance Score는 임시 계산식이며 본사 5자세 프로토콜 확정본으로 교체됩니다.</footer>
+<div class="drawer" id="drawer" hidden></div>
+<div class="modal" id="modal" hidden></div>
+<script>
+(function(){
+"use strict";
+/* ---------- constants ---------- */
+var DEFAULT_STORES = [
+  {id:"ktown", name:"코리아타운", state:"CA", city:"Los Angeles", addr:"3250 W Olympic Blvd 3층 (갤러리아)", kind:"직영", format:"Fit Studio", order:1},
+  {id:"bp", name:"부에나파크", state:"CA", city:"Buena Park", addr:"6281 Beach Blvd #106", kind:"직영", format:"Fit Studio", order:2}
+];
+var US_STATES = "AL AK AZ AR CA CO CT DE DC FL GA HI ID IL IN IA KS KY LA ME MD MA MI MN MS MO MT NE NV NH NJ NM NY NC ND OH OK OR PA RI SC SD TN TX UT VT VA WA WV WI WY".split(" ");
+var STORE_KIND = [["직영","직영"],["가맹","가맹"]];
+var STORE_FORMAT = [["Fit Studio","표준 매장"],["Fit Corner","숍인숍"],["순회","순회 점검"]];
+var IMPORT_OUT = [["card","결과 카드만"],["plan","4주 움직임 플랜"],["refer","전문가 상담 먼저"]];
+var WHO = [["self","본인"],["parent","부모님 모시고"],["family","가족 함께"]];
+var SOURCE = [["web","웹"],["phone","전화"],["walkin","방문"]];
+var FOCUS = ["발 피로","균형","무릎, 허리","골프","신발 고민","그냥 궁금해요"];
+var SAFETY = [["fall2","지난 1년 2번 이상 넘어졌거나, 넘어져서 다침"],["diabetes","당뇨가 있음"],["numb","발 감각이 둔하거나 저림"],["wound","발에 잘 낫지 않는 상처"],["rapid","최근 한쪽 발 모양이나 통증이 빠르게 달라짐"]];
+var SHIFT = ["고르게","앞꿈치","뒤꿈치","안쪽","바깥쪽","왼발 쪽","오른발 쪽"];
+var ARCH = ["넓게 닿음","보통","좁게 닿음"];
+var STANCES = ["두 발 모아 서기","일렬 서기 (한 발 뒤꿈치를 다른 발 앞꿈치 바로 앞에)","오른발 한 발 서기","왼발 한 발 서기","눈 감고 한 발 서기"];
+var MODELS = [["M455A",380],["M455B",380],["M701N",400],["M808",350],["M500D",null],["M709",380],["MW851D",400],["W350",480],["기타",null]];
+var SIZES = (function(){ var a=[]; for(var s=5;s<=13;s+=0.5) a.push(String(s)); return a; })();
+var OUTCOMES = [["buy","아치빌트인 선택"],["plan","4주 움직임 플랜"],["card","결과 카드만"],["refer","전문가 상담 먼저"]];
+var PAY = [["card","카드"],["cash","현금"],["install","할부"],["otc","아스티바 OTC"]];
+var STATUS = {booked:"예약", arrived:"도착", checking:"점검 중", done:"완료", noshow:"노쇼", cancelled:"취소"};
+var BANDS = {
+  optimize:{ko:"최적화", en:"Optimize", line:"지금의 균형과 움직임을 잘 유지하고 있어요."},
+  refine:{ko:"다듬기", en:"Refine", line:"습관 몇 가지를 더하면 균형과 편안함이 더 좋아질 수 있어요."},
+  restore:{ko:"회복", en:"Restore", line:"근력과 균형 연습, 발을 받쳐 주는 신발을 함께 쓰는 것을 권해요."},
+  refer:{ko:"상담 먼저", en:"Refer", line:"신발이나 운동을 시작하기 전에 전문가와 먼저 상담하는 것이 안전해요."}
+};
+var STEP_NAMES = ["맞이","동의, 안전","족압","균형","결과","착화 비교","선택","마무리"];
+var SCRIPTS = [
+  "오늘은 신발보다 발부터 볼게요. 편하게 계시면 돼요.",
+  "안전하게 점검하려고 몇 가지만 여쭤볼게요.",
+  "지금 서 계신 모습이 화면에 나와요. 어떤 게 눈에 띄세요?",
+  "불안하시면 바로 손잡이를 잡으세요. 언제든 멈춰도 돼요.",
+  "지금 서 있는 모습과 균형을 보여 주는 기록이에요. 병을 판단하는 검사는 아니에요.",
+  "어떤 게 다르게 느껴지세요?",
+  "보신 걸 바탕으로 고르시면 돼요. 오늘 정하지 않으셔도 괜찮아요.",
+  "다음에 오시면 오늘 기록과 비교해 드릴게요."
+];
+var SLOTS = (function(){ var a=[]; for(var m=600;m<=1100;m+=20){ a.push(pad(Math.floor(m/60))+":"+pad(m%60)); } return a; })();
+var HEALTH_KEYS = ["safety","redFlag","pressure","stances","score","band","tried","fid","footprints"];
+var REASONS = [["family","가족과 상의"],["price","가격"],["size","사이즈 없음"],["notneeded","지금은 필요 없음"],["other","기타"]];
+var WEB_FLAGS = {f_flat:"낮은 아치 경향",f_high:"높은 아치 경향",f_hv1:"엄지발가락 살짝 휨",f_hv2:"엄지발가락 휨",f_hv3:"엄지발가락 많이 휨",f_pron:"뒤꿈치 안쪽 꺾임",f_sup:"뒤꿈치 바깥쪽 기욺",f_rise:"한 발 뒤꿈치 들기 어려움",f_valgus:"무릎 안쪽으로 모임",f_varus:"무릎 벌어짐",f_bal1:"한 발 서기 10초 미만",f_bal3:"일렬 서기 10초 미만",f_wear_in:"밑창 안쪽 마모",f_wear_out:"밑창 바깥쪽 마모",f_wear_lr:"좌우 마모 차이",f_c_hal:"엄지 쪽 굳은살",f_c_met:"앞꿈치 가운데 굳은살",f_c_lat:"새끼발가락 쪽 굳은살",f_c_heel:"뒤꿈치 굳은살",f_am:"아침 첫발 통증"};
+var PAIN_NAME = {p_foot:"발바닥·뒤꿈치",p_ankle:"발목",p_knee:"무릎",p_hip:"고관절·엉덩이",p_back:"허리"};
+var SC_DOMAINS = [["st","발 구조"],["fn","발 힘·다리 정렬"],["bl","균형"],["ld","쏠림 흔적"]];
+var SC_LVL = ["양호","주의","확인 필요"], SC_OV = ["양호","주의","꼭 확인"];
+var RET_PURPOSE = [["regular","5개월 정기 재스캔"],["early","정기 전 조기 점검"],["consult","착용 상담"]];
+var LANG_NAME = {ko:"한국어",en:"English",es:"Español",vi:"Tiếng Việt",zh:"中文"};
+var CONTACT_NAME = {sms:"문자",call:"전화",kakao:"카카오톡",whatsapp:"WhatsApp",zalo:"Zalo",wechat:"WeChat"};
+function ymKo(ym){ var p=String(ym||"").split("-"); return p.length<2?"":p[0]+"년 "+(+p[1])+"월"; }
+function nextScanOf(ym){ var p=String(ym||"").split("-"); if(p.length<2) return ""; var d=new Date(+p[0],+p[1]-1+5,1); return d.getFullYear()+"-"+pad(d.getMonth()+1); }
+/* web booking record (from the landing page) -> booked visit */
+function webToVisit(b){
+  var v={store:b.store||S.store, date:b.date, time:b.time||"", name:String(b.name||"").trim(), phone:String(b.phone||"").trim(), who:["self","parent","family"][+b.who||0], focus:[], source:"web", status:"booked",
+    lang:b.lang||b.pageLang||"ko", channel:"웹", memo:"", createdAt:b.created||new Date().toISOString(),
+    web:{bookingId:b.id, contact:b.contact||"sms", contactConsent:b.consent!==false, healthConsent:!!b.healthConsent, pageLang:b.pageLang||"", created:b.created||""}};
+  if(b.ctype==="returning"){ v.ctype="returning"; v.wearing=true; v.lastScan=b.lastScan||""; v.retPurpose=["regular","early","consult"][+b.purpose||0]; v.model=b.model||""; v.nextRegular=b.nextRegular||nextScanOf(b.lastScan); }
+  else v.ctype="new";
+  if(b.healthConsent && b.selfcheck) v.selfcheck=b.selfcheck;
+  if(b.healthConsent && b.selfcheck && b.selfcheck.rf) v.webRf=true;
+  return v;
+}
+function webBox(d){
+  if(d.source!=="web" && d.ctype!=="returning") return "";
+  var h='<div class="webbox"><b>'+(d.source==="web"?"웹 예약 정보":"기존 고객 예약 정보")+'</b>';
+  var rows=[];
+  if(d.ctype==="returning"){ rows.push(["고객 구분","기존 고객 · 착용 중"]); rows.push(["방문 목적",label(RET_PURPOSE,d.retPurpose)||""]);
+    if(d.lastScan){ var nx=d.nextRegular||nextScanOf(d.lastScan); rows.push(["지난 스캔",ymKo(d.lastScan)]); rows.push(["정기 재스캔",ymKo(nx)+(nx>todayISO().slice(0,7)?" (지금은 조기 점검)":" (정기 시기)")]); }
+    if(d.model) rows.push(["착용 모델",d.model]); }
+  else if(d.source==="web") rows.push(["고객 구분","처음 방문"]);
+  if(d.lang) rows.push(["상담 언어",LANG_NAME[d.lang]||d.lang]);
+  if(d.web){ rows.push(["확인 연락",CONTACT_NAME[d.web.contact]||d.web.contact||""]); rows.push(["건강 정보 동의",d.web.healthConsent?"동의 (자가 점검 결과 받음)":"동의 안 함 (예약만 받음)"]); }
+  h+='<table class="sumtable">'+rows.map(function(r){ return '<tr><th>'+esc(r[0])+'</th><td>'+esc(r[1])+'</td></tr>'; }).join("")+'</table>';
+  var sc=d.selfcheck;
+  if(sc){
+    if(sc.rf) h+='<p class="flagbox" style="margin:10px 0"><b>예약 때 의료 확인 권유 항목을 골랐어요.</b> 맞이 단계에서 먼저 확인하고, 해당되면 족부 전문의나 주치의 상담부터 안내하세요.</p>';
+    h+='<p style="margin:10px 0 6px"><b>웹 자가 점검: '+esc(sc.overall!=null?SC_OV[sc.overall]:"답 없음")+'</b> <span class="muted small">'+(sc.answered!=null?'('+sc.answered+'/11 문항)':'')+'</span></p>';
+    h+='<div class="tags">'+SC_DOMAINS.map(function(x){ var l=sc.domains?sc.domains[x[0]]:null; return '<span class="tag'+(l===2?' flag':'')+'">'+esc(x[1])+': '+esc(l==null?"답 없음":SC_LVL[l])+'</span>'; }).join("")+'</div>';
+    var fl=(sc.flags||[]).filter(function(k){ return WEB_FLAGS[k]; });
+    if(fl.length) h+='<p class="small" style="margin:8px 0 0">신호: '+esc(fl.map(function(k){ return WEB_FLAGS[k]; }).join(", "))+'</p>';
+    var pn=(sc.pain||[]).filter(function(k){ return PAIN_NAME[k]; });
+    if(pn.length) h+='<p class="small" style="margin:4px 0 0">불편한 곳: '+esc(pn.map(function(k){ return PAIN_NAME[k]; }).join(", "))+'</p>';
+    h+='<p class="muted small" style="margin:6px 0 0">고객이 집에서 한 자가 점검이에요. 진단이 아니니, 족압과 균형 측정으로 확인하며 설명하세요.</p>';
+  }
+  return h+'</div>';
+}
+var CHANNELS = ["숏폼 영상","온라인 광고","검색, 지도","교회, 단체 행사","한인 매체","지인 추천","기존 고객","기타"];
+var GROUPS = [
+  ["all","전체","전체"],
+  ["A-booked","신규","예약만"],["A-noshow","신규","노쇼"],
+  ["B-adapt","구매","적응기"],["B-stable","구매","안정기"],["B-recheck","구매","재점검 시기"],["B-replace","구매","교체 점검"],["B-dormant","구매","휴면"],
+  ["C-think","점검만","고민 중"],["C-plan","점검만","움직임 플랜"],["C-size","점검만","사이즈 없음"],["C-notneeded","점검만","필요 없음"],["C-unknown","점검만","이유 미기록"],
+  ["S-refer","특별","상담 먼저"],["S-noconsent","특별","연락 동의 없음"],["S-family","특별","가족 연결"],["S-stop","특별","연락 중단"]
+];
+
+/* ---------- helpers ---------- */
+function pad(n){ return (n<10?"0":"")+n; }
+function byId(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];}); }
+function iso(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+function parseISO(s){ var p=String(s).split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
+function todayISO(){ return iso(new Date()); }
+function addDays(s,n){ var d=parseISO(s); d.setDate(d.getDate()+n); return iso(d); }
+function addMonths(s,n){ var d=parseISO(s); d.setMonth(d.getMonth()+n); return iso(d); }
+function kDate(s){ var d=parseISO(s); return (d.getMonth()+1)+"월 "+d.getDate()+"일 ("+["일","월","화","수","목","금","토"][d.getDay()]+")"; }
+function kDateY(s){ var d=parseISO(s); return d.getFullYear()+"년 "+(d.getMonth()+1)+"월 "+d.getDate()+"일"; }
+function digits(s){ return String(s||"").replace(/\D/g,""); }
+function label(list,v){ for(var i=0;i<list.length;i++) if(list[i][0]===v) return list[i][1]; return ""; }
+function isObj(v){ return v && typeof v==="object" && !Array.isArray(v); }
+function merge(a,b){ var o=isObj(a)?Object.assign({},a):{}; Object.keys(b||{}).forEach(function(k){ o[k]=(isObj(b[k])&&isObj(o[k]))?merge(o[k],b[k]):b[k]; }); return o; }
+function clone(o){ return JSON.parse(JSON.stringify(o||{})); }
+function nowHM(){ var d=new Date(); var m=d.getHours()*60+d.getMinutes(); m=Math.ceil(m/20)*20; return pad(Math.floor(m/60)%24)+":"+pad(m%60); }
+function makeFid(){ var c="ABCDEFGHJKMNPQRSTUVWXYZ23456789",s=""; for(var i=0;i<3;i++) s+=c.charAt(Math.floor(Math.random()*c.length)); return "LB-"+s+"-"+(1000+Math.floor(Math.random()*9000)); }
+function newId(){ return "v"+Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+
+/* ---------- scoring (임시 계산식) ---------- */
+function calcScore(stances){
+  if(!Array.isArray(stances)) return null;
+  var any=false, total=0;
+  stances.forEach(function(s){ if(typeof s==="number"){ any=true; total += Math.max(0,Math.min(10,s))/10*20; } });
+  return any ? Math.round(total) : null;
+}
+function redFlagOf(sf){ sf=sf||{}; return !!(sf.fall2 || sf.wound || sf.rapid || (sf.diabetes && sf.numb)); }
+function bandOf(score, flag){ if(flag) return "refer"; if(score==null) return null; return score>=80?"optimize":score>=60?"refine":score>=40?"restore":"refer"; }
+function lockedStances(sf){ sf=sf||{}; return (sf.diabetes&&sf.numb) || sf.fall2 ? [2,3,4] : []; }
+
+/* ---------- state ---------- */
+var S = {
+  store: (function(){ try{ return localStorage.getItem("lebal_dash_store")||"ktown"; }catch(e){ return "ktown"; } })(),
+  date: todayISO(), tab:"today", kpiPeriod:"7",
+  visits:{}, ready:false, mode:"local", canWrite:true, canAdmin:false,
+  openId:null, draft:null, step:0, search:"", people:{}, crmGroup:"all", stores:{}, assets:null
+};
+var chains = {}, noteTimer = null;
+
+/* ---------- backend ---------- */
+var LKEY="lebal_dash_v1";
+var LPKEY="lebal_dash_people_v1";
+var LSKEY="lebal_dash_stores_v1";
+var backend = {
+  db:null, col:null,
+  init: function(){
+    var self=this;
+    renderAll();
+    var has = window.claude && typeof window.claude.use==="function";
+    if(!has){ self.startLocal(); return; }
+    window.claude.use("db").then(function(db){
+      if(!db){ self.startLocal(); return; }
+      self.db=db; self.col=db.collection("visits"); S.mode="db";
+      self.col.onSnapshot(function(snap){
+        var map={}; snap.docs.forEach(function(d){ var v=d.data(); if(v) map[d.id]=Object.assign({id:d.id}, v); });
+        S.visits=map; S.ready=true;
+        if(S.openId && S.draft && map[S.openId]){ S.draft = merge(map[S.openId], S.draft); }
+        renderAll();
+      }, function(err){ S.mode="error"; S.ready=true; renderAll(); });
+      db.collection("stores").onSnapshot(function(snap){ var m={}; snap.docs.forEach(function(d){ var v=d.data(); if(v) m[d.id]=Object.assign({id:d.id}, v); }); S.stores=m; renderAll(); }, function(){});
+      window.claude.use("assets").then(function(a){ S.assets=a||null; renderAll(); if(S.openId) renderDrawer(); }).catch(function(){ S.assets=null; });
+      db.collection("people").onSnapshot(function(snap){ var m={}; snap.docs.forEach(function(d){ var v=d.data(); if(v) m[d.id]=v; }); S.people=m; renderAll(); }, function(){});
+      return window.claude.use("user");
+    }).then(function(user){
+      if(!user) return;
+      Promise.all([user.can("data.write"), user.canEdit(), user.isOwner()]).then(function(r){
+        S.canWrite = r[0]!==false; S.canAdmin = !!(r[1]||r[2]); renderAll();
+      }).catch(function(){});
+    }).catch(function(){ self.startLocal(); });
+  },
+  startLocal: function(){
+    S.mode="local";
+    try{ var raw=localStorage.getItem(LKEY); S.visits = raw ? JSON.parse(raw) : {}; }catch(e){ S.visits={}; }
+    try{ var rp=localStorage.getItem(LPKEY); S.people = rp ? JSON.parse(rp) : {}; }catch(e){ S.people={}; }
+    try{ var rs=localStorage.getItem(LSKEY); S.stores = rs ? JSON.parse(rs) : {}; }catch(e){ S.stores={}; }
+    S.canAdmin = true;
+    S.ready=true; renderAll();
+  },
+  saveLocal: function(){ try{ localStorage.setItem(LKEY, JSON.stringify(S.visits)); }catch(e){} },
+  write: function(id, patch, isNew){
+    var cur = S.visits[id] || {};
+    S.visits[id] = merge(cur, patch); S.visits[id].id = id;
+    if(S.mode!=="db"){ backend.saveLocal(); renderAll(); return Promise.resolve(); }
+    var body = clone(patch); delete body.id;
+    var prev = chains[id] || Promise.resolve();
+    var ref = backend.col.doc(id);
+    var full = clone(S.visits[id]); delete full.id;
+    var p = prev.then(function(){ return isNew ? ref.set(full) : ref.update(body); })
+      .catch(function(e){ if(e && e.code==="invalid_argument"){ S.canWrite=false; toast("저장 권한이 없어 보기 전용으로 바뀌었어요."); renderAll(); } else if(e && e.code==="quota_exceeded"){ toast("저장 공간이 가득 찼어요. 본사에 알려 주세요."); } else { toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); } });
+    chains[id]=p; renderAll(); return p;
+  },
+  writePerson: function(key, patch){
+    var full = merge(S.people[key]||{}, patch); full.key = key; S.people[key] = full;
+    if(S.mode!=="db"){ try{ localStorage.setItem(LPKEY, JSON.stringify(S.people)); }catch(e){} renderAll(); return Promise.resolve(); }
+    var ck="P:"+key, prev=chains[ck]||Promise.resolve(), body=clone(full);
+    var p=prev.then(function(){ return backend.db.collection("people").doc(key).set(body); }).catch(function(){ toast("연락 기록을 저장하지 못했어요."); });
+    chains[ck]=p; renderAll(); return p;
+  },
+  writeStore: function(id, data){
+    var full = merge(S.stores[id]||{}, data); full.id = id; S.stores[id] = full;
+    if(S.mode!=="db"){ try{ localStorage.setItem(LSKEY, JSON.stringify(S.stores)); }catch(e){} renderAll(); return Promise.resolve(); }
+    var ck="S:"+id, prev=chains[ck]||Promise.resolve(), body=clone(full); delete body.id;
+    var p=prev.then(function(){ return backend.db.collection("stores").doc(id).set(body); }).catch(function(e){ toast(e&&e.code==="invalid_argument" ? "매장 추가와 수정은 본사 관리자(Editor 이상)만 할 수 있어요." : "매장 정보를 저장하지 못했어요."); });
+    chains[ck]=p; renderAll(); return p;
+  },
+  remove: function(id){
+    delete S.visits[id];
+    if(S.mode!=="db"){ backend.saveLocal(); renderAll(); return Promise.resolve(); }
+    var prev = chains[id] || Promise.resolve();
+    var p = prev.then(function(){ return backend.col.doc(id).delete(); }).catch(function(){ toast("삭제하지 못했어요."); });
+    chains[id]=p; renderAll(); return p;
+  }
+};
+function toast(msg){ var n=byId("toast"); if(!n){ n=document.createElement("div"); n.id="toast"; n.setAttribute("role","status"); n.style.cssText="position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:999px;z-index:80;font-size:.9rem;max-width:90vw"; document.body.appendChild(n); } n.textContent=msg; n.hidden=false; clearTimeout(n._t); n._t=setTimeout(function(){ n.hidden=true; },3200); }
+
+/* persist a patch for the open visit, honoring consent */
+function persistDraft(patch){
+  if(!S.openId) return;
+  S.draft = merge(S.draft, patch);
+  if(!S.canWrite){ renderDrawer(); return; }
+  var out = clone(patch);
+  if(S.draft.consent===false){ HEALTH_KEYS.forEach(function(k){ delete out[k]; }); }
+  if(Object.keys(out).length) backend.write(S.openId, out); else renderDrawer();
+}
+
+/* ---------- queries ---------- */
+function list(){ return Object.keys(S.visits).map(function(k){ return S.visits[k]; }); }
+function storeVisits(){ return list().filter(function(v){ return (v.store||"ktown")===S.store; }); }
+function dayVisits(){ return storeVisits().filter(function(v){ return v.date===S.date; }).sort(function(a,b){ return String(a.time).localeCompare(String(b.time)); }); }
+function historyOf(v){
+  var ph=digits(v.phone);
+  return list().filter(function(o){ return o.id!==v.id && ((v.fid && o.fid===v.fid) || (ph.length>=7 && digits(o.phone)===ph)); })
+    .sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); });
+}
+function followups(){
+  var t=todayISO(), out={d7:[],recheck:[],noshow:[]};
+  storeVisits().forEach(function(v){
+    if(v.outcome==="buy" && v.d7 && v.d7.due && !v.d7.done && v.d7.due<=addDays(t,2)) out.d7.push(v);
+    if(v.recheck && v.recheck.due && !v.recheck.done && v.recheck.due<=addDays(t,14)) out.recheck.push(v);
+    if(v.status==="noshow"){ var c=(v.noshowCall&&v.noshowCall.count)||0; if(c===0 || (c===1 && addDays(v.date,7)<=t)) out.noshow.push(v); }
+  });
+  ["d7","recheck"].forEach(function(k){ out[k].sort(function(a,b){ return String(a[k].due).localeCompare(String(b[k].due)); }); });
+  return out;
+}
+function fuCount(){ var f=followups(); var t=todayISO(); return f.d7.filter(function(v){return v.d7.due<=t;}).length + f.recheck.filter(function(v){return v.recheck.due<=t;}).length + f.noshow.length; }
+
+/* ---------- stores ---------- */
+function allStores(){
+  var m={}; DEFAULT_STORES.forEach(function(d){ m[d.id]=Object.assign({}, d); });
+  Object.keys(S.stores).forEach(function(k){ m[k]=merge(m[k]||{}, S.stores[k]); m[k].id=k; });
+  return Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){ return ((a.order||99)-(b.order||99)) || String(a.createdAt||"").localeCompare(String(b.createdAt||"")); });
+}
+function activeStores(){ return allStores().filter(function(s){ return s.active!==false; }); }
+function storeName(id){ var s=allStores().filter(function(x){ return x.id===id; })[0]; return s ? s.name : id; }
+function storeLabel(s){ return s.name + (s.state ? " ("+s.state+")" : ""); }
+
+/* ---------- top chrome ---------- */
+function renderTop(){
+  var act=activeStores(); if(act.length && !act.some(function(x){ return x.id===S.store; })) S.store=act[0].id;
+  var groups={}; act.forEach(function(x){ var g=x.state||"기타"; (groups[g]=groups[g]||[]).push(x); });
+  byId("storeSel").innerHTML = Object.keys(groups).map(function(g){ return '<optgroup label="'+esc(g)+'">'+groups[g].map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id===S.store?' selected':'')+'>'+esc(x.name)+'</option>'; }).join("")+'</optgroup>'; }).join("");
+  byId("dLabel").textContent = kDate(S.date) + (S.date===todayISO()?" 오늘":"");
+  var sync=byId("sync");
+  if(S.mode==="db"){ sync.textContent = S.canWrite ? "공유 저장 연결됨" : "보기 전용"; sync.className="chip-sync on"; }
+  else if(S.mode==="error"){ sync.textContent="연결이 끊겼어요"; sync.className="chip-sync"; }
+  else { sync.textContent="이 기기에만 저장"; sync.className="chip-sync"; }
+  var n=fuCount();
+  var tabs=[["today","오늘 방문"],["crm","고객 관리"],["search","고객 찾기"],["follow","후속 연락"],["kpi","운영 지표"],["stores","매장 설정"]];
+  byId("tabs").innerHTML = tabs.map(function(t){ return '<button role="tab" data-act="tab" data-v="'+t[0]+'" aria-selected="'+(S.tab===t[0])+'">'+t[1]+(t[0]==="follow"&&n?'<span class="badge">'+n+'</span>':'')+'</button>'; }).join("");
+}
+
+/* ---------- today ---------- */
+function visitRow(v){
+  var flag = v.redFlag ? '<span class="tag flag">위험 신호</span>' : '';
+  var tags = (v.who&&v.who!=="self"?'<span class="tag">'+esc(label(WHO,v.who))+'</span>':'') + (Array.isArray(v.focus)?v.focus.map(function(f){return '<span class="tag">'+esc(f)+'</span>';}).join(""):"") + flag + (historyOf(v).length?'<span class="tag">재점검</span>':'')
+    + (v.ctype==="returning"?'<span class="tag ret">기존 고객 · 착용 중</span><span class="tag">'+esc(label(RET_PURPOSE,v.retPurpose)||"")+'</span>':'')
+    + (v.selfcheck?'<span class="tag'+(v.selfcheck.overall===2?' flag':'')+'">자가 점검 '+esc(v.selfcheck.overall!=null?SC_OV[v.selfcheck.overall]:"")+' · 신호 '+((v.selfcheck.flags||[]).filter(function(k){return WEB_FLAGS[k];}).length)+'</span>':'')
+    + (v.webRf?'<span class="tag flag">의료 확인 권유</span>':'')
+    + (v.lang&&v.lang!=="ko"?'<span class="tag">'+esc(LANG_NAME[v.lang]||v.lang)+'</span>':'');
+  var acts = '';
+  if(S.canWrite){
+    if(v.status==="booked") acts += '<button class="btn sm" data-act="arrive" data-id="'+v.id+'">도착</button><button class="btn ghost sm" data-act="noshow" data-id="'+v.id+'">노쇼</button>';
+    if(v.status==="arrived"||v.status==="checking") acts += '<button class="btn sm" data-act="open" data-id="'+v.id+'">'+(v.status==="checking"?"점검 이어서":"점검 시작")+'</button>';
+    if(v.status==="done") acts += '<button class="btn ghost sm" data-act="open" data-id="'+v.id+'">기록 보기</button>';
+    if(v.status==="noshow"||v.status==="cancelled") acts += '<button class="btn ghost sm" data-act="restore" data-id="'+v.id+'">예약으로 되돌리기</button>';
+  } else acts += '<button class="btn ghost sm" data-act="open" data-id="'+v.id+'">보기</button>';
+  return '<div class="visit"><div class="t">'+esc(v.time||"")+'</div><div><div class="n">'+esc(v.name||"이름 없음")+' <span class="pill '+esc(v.status)+'">'+esc(STATUS[v.status]||v.status)+'</span></div><div class="meta">'+esc(v.phone||"")+(v.source?', '+esc(label(SOURCE,v.source)):'')+(v.score!=null&&v.status==="done"?', '+v.score+'점':'')+'</div><div class="tags">'+tags+'</div></div><div class="row-actions">'+acts+'</div></div>';
+}
+function vToday(){
+  var vs=dayVisits();
+  var c={booked:0,arrived:0,checking:0,done:0,noshow:0,cancelled:0}; vs.forEach(function(v){ c[v.status]=(c[v.status]||0)+1; });
+  var active=vs.length-c.cancelled, buys=vs.filter(function(v){return v.outcome==="buy";}).length;
+  var line = vs.length ? (kDate(S.date)+', 예약 <b>'+active+'</b>명 중 <b>'+(c.arrived+c.checking+c.done)+'</b>명이 왔고 <b>'+c.done+'</b>명 점검을 마쳤어요. 매장에 있는 분 <b>'+(c.arrived+c.checking)+'</b>명, 노쇼 <b>'+c.noshow+'</b>명, 아치빌트인 선택 <b>'+buys+'</b>명.') : (kDate(S.date)+'에는 아직 예약이 없어요.');
+  var h = noticeHtml() + '<p class="statusline">'+line+'</p>';
+  if(S.canWrite) h += '<div class="toolbar"><button class="btn" data-act="newBooking">예약 추가</button><button class="btn sec" data-act="webImport">웹 예약 가져오기</button><button class="btn sec" data-act="walkin">예약 없이 오신 분</button>'+(S.canAdmin&&list().some(function(v){return v.demo;})?'<button class="btn danger sm" data-act="clearDemo">예시 데이터 지우기</button>':'')+'</div>';
+  var inStore=vs.filter(function(v){return v.status==="arrived"||v.status==="checking";});
+  var waiting=vs.filter(function(v){return v.status==="booked";});
+  var fin=vs.filter(function(v){return ["done","noshow","cancelled"].indexOf(v.status)>=0;});
+  h += '<div class="group-h">지금 매장에 계신 분</div>' + (inStore.length?inStore.map(visitRow).join(""):'<div class="empty">아직 없어요.</div>');
+  h += '<div class="group-h">남은 예약</div>' + (waiting.length?waiting.map(visitRow).join(""):'<div class="empty">남은 예약이 없어요.</div>');
+  h += '<div class="group-h">끝난 방문</div>' + (fin.length?fin.map(visitRow).join(""):'<div class="empty">아직 없어요.</div>');
+  return h;
+}
+function noticeHtml(){
+  if(!S.ready) return '<p class="notice">기록을 불러오는 중이에요.</p>';
+  if(S.mode==="local") return '<p class="notice">공유 저장에 연결되지 않아 이 기기에만 저장하고 있어요. claude.ai에서 열면 매장 직원끼리 같은 기록을 봐요.</p>';
+  if(S.mode==="error") return '<p class="notice warn">기록 연결이 끊겼어요. 페이지를 다시 열어 주세요.</p>';
+  if(!S.canWrite) return '<p class="notice">보기 전용 권한이에요. 고객 기록을 보고 고치려면 매장 담당자(Contributor 이상) 권한이 필요해요.</p>';
+  return '';
+}
+
+/* ---------- search ---------- */
+function vSearch(){
+  var q=S.search.trim(), qd=digits(q);
+  var h = noticeHtml() + '<label class="field"><span>이름, 연락처, Footprint ID로 찾기</span><input type="text" id="searchIn" value="'+esc(q)+'" placeholder="예: 김영희, 213-555, LB-"></label>';
+  if(!q){ return h + '<p class="muted small" style="margin-top:14px">두 글자 이상 입력하면 이전 방문 기록이 나와요.</p>'; }
+  var hits=list().filter(function(v){ return (v.name&&v.name.indexOf(q)>=0) || (qd.length>=3 && digits(v.phone).indexOf(qd)>=0) || (v.fid&&v.fid.toUpperCase().indexOf(q.toUpperCase())>=0); });
+  var groups={}; hits.forEach(function(v){ var k=v.fid||("p"+digits(v.phone))||v.id; (groups[k]=groups[k]||[]).push(v); });
+  var keys=Object.keys(groups);
+  if(!keys.length) return h + '<div class="empty">찾는 고객이 없어요.</div>';
+  keys.forEach(function(k){
+    var g=groups[k].sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); }), last=g[0];
+    h += '<div class="group-h">'+esc(last.name||"이름 없음")+' <span class="muted small">'+esc(last.phone||"")+(last.fid?', '+esc(last.fid):'')+'</span></div>';
+    h += '<table class="sumtable"><tr><th>방문일</th><th>상태</th><th>점수</th><th>선택</th></tr>' + g.map(function(v){ return '<tr><td><button class="btn ghost sm" data-act="open" data-id="'+v.id+'">'+esc(kDate(v.date))+'</button></td><td>'+esc(STATUS[v.status]||"")+'</td><td>'+(v.score!=null?v.score+'점 '+esc(BANDS[v.band]?BANDS[v.band].ko:''):'')+'</td><td>'+esc(label(OUTCOMES,v.outcome))+'</td></tr>'; }).join("") + '</table>';
+    if(S.canWrite) h += '<div class="toolbar"><button class="btn sec sm" data-act="rebook" data-id="'+last.id+'">재점검 예약 만들기</button></div>';
+  });
+  return h;
+}
+
+/* ---------- follow-ups ---------- */
+function fuRow(v, kind){
+  var t=todayISO(), due = kind==="noshow" ? (((v.noshowCall&&v.noshowCall.count)||0)===0 ? v.date : addDays(v.date,7)) : v[kind].due;
+  var over = due<=t;
+  var what = kind==="d7" ? ('7일차 착화 확인: '+esc((v.purchase&&v.purchase.model)||"")+' '+esc((v.purchase&&v.purchase.size)||"")) : kind==="recheck" ? ('재점검 초대, 지난 점수 '+(v.score!=null?v.score+'점':'기록 없음')) : ('노쇼 재예약 연락 '+(((v.noshowCall&&v.noshowCall.count)||0)+1)+'회차');
+  var acts = '<a class="btn ghost sm" href="tel:'+esc(digits(v.phone))+'">전화</a>';
+  if(S.canWrite){
+    acts += '<button class="btn sm" data-act="fuDone" data-kind="'+kind+'" data-id="'+v.id+'">완료</button>';
+    if(kind!=="d7") acts += '<button class="btn sec sm" data-act="rebook" data-id="'+v.id+'">예약 만들기</button>';
+  }
+  return '<div class="fu"><div><b>'+esc(v.name||"")+'</b> <span class="muted small">'+esc(v.phone||"")+'</span><div class="small">'+what+'</div><div class="due small'+(over?' over':'')+'">'+(over?'기한 지남 또는 오늘: ':'')+esc(kDate(due))+'</div></div><div class="row-actions">'+acts+'</div></div>';
+}
+function vFollow(){
+  var f=followups();
+  var h = noticeHtml();
+  h += '<div class="group-h">7일차 착화 확인 전화 ('+f.d7.length+')</div><p class="script"><small>대사</small>"신발 신어 보시니 어떠세요? 불편한 곳이 있으면 맞춰 드릴게요."</p>' + (f.d7.length?f.d7.map(function(v){return fuRow(v,"d7");}).join(""):'<div class="empty">할 연락이 없어요.</div>');
+  h += '<div class="group-h">재점검 초대 (2주 안, '+f.recheck.length+')</div><p class="script"><small>대사</small>"정기 재스캔 시기가 됐어요. 처음 족문과 나란히 놓고 비교해 드릴게요. 편하신 시간을 잡아 드릴까요?"</p>' + (f.recheck.length?f.recheck.map(function(v){return fuRow(v,"recheck");}).join(""):'<div class="empty">할 연락이 없어요.</div>');
+  h += '<div class="group-h">노쇼 재예약 ('+f.noshow.length+')</div><p class="script"><small>대사</small>"오늘 못 오셨네요. 편하신 시간으로 다시 잡아 드릴까요?" 두 번째 연락 뒤에는 더 연락하지 않아요.</p>' + (f.noshow.length?f.noshow.map(function(v){return fuRow(v,"noshow");}).join(""):'<div class="empty">할 연락이 없어요.</div>');
+  return h;
+}
+
+/* ---------- KPI ---------- */
+function vKpi(){
+  var t=todayISO(), from = S.kpiPeriod==="month" ? t.slice(0,8)+"01" : addDays(t, -(+S.kpiPeriod-1));
+  var vs=storeVisits().filter(function(v){ return v.date>=from && v.date<=t; });
+  var booked=vs.filter(function(v){ return v.source!=="walkin" && v.status!=="cancelled"; });
+  var showed=booked.filter(function(v){ return ["arrived","checking","done"].indexOf(v.status)>=0; });
+  var noshow=booked.filter(function(v){ return v.status==="noshow"; });
+  var done=vs.filter(function(v){ return v.status==="done"; });
+  var withScore=done.filter(function(v){ return typeof v.score==="number"; });
+  var flagged=done.filter(function(v){ return v.redFlag; });
+  var d7due=storeVisits().filter(function(v){ return v.outcome==="buy" && v.d7 && v.d7.due && v.d7.due<=t && v.d7.due>=from; });
+  var d7done=d7due.filter(function(v){ return v.d7.done; });
+  var rechecks=done.filter(function(v){ return historyOf(v).some(function(o){ return o.date<v.date; }); });
+  function pct(a,b){ return b ? Math.round(a/b*100) : null; }
+  var showRate=pct(showed.length,booked.length), d7Rate=pct(d7done.length,d7due.length);
+  var ck=crmKpis(from, t);
+  var rows=[
+    ["예약", booked.length+"건", "", null],
+    ["방문율", showRate==null?"없음":showRate+"%", "70% 이상", showRate==null?null:showRate>=70],
+    ["노쇼", noshow.length+"건", "", null],
+    ["점검 완료", done.length+"명", "", null],
+    ["평균 Balance Score", withScore.length?Math.round(withScore.reduce(function(a,v){return a+v.score;},0)/withScore.length)+"점":"없음", "", null],
+    ["위험 신호 고객", done.length?pct(flagged.length,done.length)+"%":"없음", "전문가 연계 100%", null],
+    ["7일차 확인 전화", d7Rate==null?"대상 없음":d7Rate+"%", "100%", d7Rate==null?null:d7Rate>=100],
+    ["재점검 방문", rechecks.length+"명", "", null],
+    ["지인 추천으로 온 예약", ck.refRate==null?"경로 기록 없음":ck.refRate+"%", "15%", ck.refRate==null?null:ck.refRate>=15],
+    ["점검만 받은 고객 90일 재방문", ck.returnRate==null?"대상 없음":ck.returnRate+"%", "20%", ck.returnRate==null?null:ck.returnRate>=20],
+    ["연락 중단 요청 비율", ck.stopRate==null?"없음":ck.stopRate+"%", "5% 미만", ck.stopRate==null?null:ck.stopRate<5]
+  ];
+  var h = noticeHtml() + '<div class="toolbar"><div class="seg" role="group" aria-label="기간">'+[["7","최근 7일"],["30","최근 30일"],["month","이번 달"]].map(function(p){ return '<button data-act="period" data-v="'+p[0]+'" aria-pressed="'+(S.kpiPeriod===p[0])+'">'+p[1]+'</button>'; }).join("")+'</div><span class="muted small">'+esc(storeName(S.store))+' 매장, '+esc(kDate(from))+'부터</span></div>';
+  h += '<table class="kpitable"><tr><th>지표</th><th>이번 기간</th><th>매뉴얼 기준</th><th>상태</th></tr>' + rows.map(function(r){ return '<tr><td>'+r[0]+'</td><td class="v">'+r[1]+'</td><td class="muted small">'+r[2]+'</td><td>'+(r[3]===null?'':(r[3]?'<span class="st-ok">충족</span>':'<span class="st-no">미달</span>'))+'</td></tr>'; }).join("") + '</table>';
+  var tot=done.length;
+  h += '<div class="group-h">점검 뒤 고객의 선택 ('+tot+'명)</div><div class="bars">' + OUTCOMES.map(function(o){ var n=done.filter(function(v){return v.outcome===o[0];}).length; var p=tot?Math.round(n/tot*100):0; return '<div class="barrow"><span>'+o[1]+'</span><div class="bar"><i style="width:'+p+'%"></i></div><span>'+n+'명</span></div>'; }).join("") + '</div>';
+  h += '<p class="muted small" style="margin-top:14px">선택 비율은 판매 목표가 아니에요. 다섯 가지 약속을 지키면서 고객이 스스로 고른 결과예요.</p>';
+  return h;
+}
+
+/* ---------- CRM: customer groups ---------- */
+function daysBetween(a,b){ return Math.round((parseISO(b)-parseISO(a))/86400000); }
+function computePeople(allStores){
+  var t=todayISO(), all=list(), phoneToFid={}, map={}, out=[];
+  all.forEach(function(v){ var d=digits(v.phone); if(v.fid && d.length>=7) phoneToFid[d]=v.fid; });
+  function key(v){ var d=digits(v.phone); return v.fid || (d.length>=7 && phoneToFid[d]) || (d.length>=7 ? "p"+d : "v"+v.id); }
+  all.forEach(function(v){ var k=key(v); (map[k]=map[k]||[]).push(v); });
+  Object.keys(map).forEach(function(k){
+    var vs=map[k].slice().sort(function(a,b){ return (String(b.date)+b.time).localeCompare(String(a.date)+a.time); });
+    var latest=vs[0];
+    if(!allStores && (latest.store||"ktown")!==S.store) return;
+    var done=vs.filter(function(v){ return v.status==="done"; }), lastDone=done[0]||null;
+    var buys=done.filter(function(v){ return v.outcome==="buy"; });
+    var mv=vs.filter(function(v){ return v.marketingConsent!=null; })[0];
+    var fam=[]; vs.forEach(function(v){ (v.familyIds||[]).forEach(function(id){ if(fam.indexOf(id)<0 && S.visits[id]) fam.push(id); }); });
+    var pp=S.people[k]||{};
+    var lastAct=[latest.date, pp.lastContactAt?pp.lastContactAt.slice(0,10):null].filter(Boolean).sort().pop();
+    var g;
+    if(lastDone && lastDone.consent===false) g="S-noconsent";
+    else if(lastDone && !buys.length && (lastDone.outcome==="refer" || lastDone.redFlag)) g="S-refer";
+    else if(buys.length){
+      var lb=buys[0], dd=daysBetween(lb.date,t), rc=lb.recheck;
+      if(dd<=30) g="B-adapt";
+      else if(daysBetween(lastAct,t)>365) g="B-dormant";
+      else if(dd>=365) g="B-replace";
+      else if(rc && !rc.done && rc.due<=addDays(t,14)) g="B-recheck";
+      else g="B-stable";
+    } else if(done.length){
+      var o=lastDone.outcome, r=lastDone.noBuyReason;
+      g = o==="plan" ? "C-plan" : r==="size" ? "C-size" : r==="notneeded" ? "C-notneeded" : (r==="family"||r==="price") ? "C-think" : "C-unknown";
+    } else g = (latest.status==="noshow"||latest.status==="cancelled") ? "A-noshow" : "A-booked";
+    out.push({key:k, vs:vs, latest:latest, lastDone:lastDone, buys:buys, mkt:mv?mv.marketingConsent:null, fam:fam, group:g, pp:pp, lastAct:lastAct});
+  });
+  return out;
+}
+function nextAction(p){
+  var r=p.lastDone && p.lastDone.noBuyReason;
+  switch(p.group){
+    case "A-booked": return {t:"예약 리마인더가 자동으로 나가요. 시니어는 전날 전화로도 확인하세요."};
+    case "A-noshow": return {t:"재예약 연락은 최대 2회예요. 후속 연락 탭에서 진행하세요."};
+    case "B-adapt": return {t:"7일차 착화 확인 전화, 30일 교환 기간 전 마지막 확인."};
+    case "B-stable": return {t:"7일차 확인이 좋았다면 가족·지인 초대권 안내.", mkt:true};
+    case "B-recheck": return {t:"재점검 초대: \"지난번 기록과 비교해 드릴게요.\""};
+    case "B-replace": return {t:"밑창과 착화 상태 무료 점검 초대."};
+    case "B-dormant": return {t:"1년에 한 번 새 시즌 소식만. 반응이 없으면 중단.", mkt:true};
+    case "C-think": return r==="price" ? {t:"따로 연락하지 않아요. 재점검 때 할부 같은 선택지를 다시 안내."} : {t:"3~7일 뒤 가족에게 보여 줄 결과 요약 1회, 가족 동반 방문 안내."};
+    case "C-plan": return {t:"4주 뒤 움직임 플랜 확인 연락 1회. 신발 권유는 하지 않음."};
+    case "C-size": return {t:"사이즈가 들어오면 바로 알림. 중앙 창고 주문도 안내."};
+    case "C-notneeded": return {t:"재점검 초대만 (4~5개월 뒤)."};
+    case "C-unknown": return {t:"선택하지 않은 이유를 점검 기록의 '선택' 단계에 남겨 주세요."};
+    case "S-refer": return {t:"2주 뒤 안부 연락 1회: \"전문의 상담은 받아 보셨어요?\" 신발 이야기는 하지 않음."};
+    case "S-noconsent": return {t:"연락하지 않아요. 다시 오시면 처음부터 점검해 드려요."};
+  }
+  return {t:""};
+}
+function groupLabel(id){ var g=GROUPS.filter(function(x){ return x[0]===id; })[0]; return g ? (g[1]==="전체"?"전체":g[1]+": "+g[2]) : ""; }
+function crmRow(p){
+  var t=todayISO(), pp=p.pp, log=pp.log||[], na=nextAction(p);
+  var lastDays = pp.lastContactAt ? daysBetween(pp.lastContactAt.slice(0,10), t) : null;
+  var noAns2 = log.length>=2 && log.slice(-2).every(function(l){ return l.res==="noanswer"; });
+  var nonBuyer = p.group.charAt(0)==="C";
+  var badges = '<span class="tag">'+esc(groupLabel(p.group))+'</span>' + (p.mkt!==true?'<span class="tag">마케팅 동의 없음</span>':'') + (pp.stop?'<span class="tag flag">연락 중단 요청</span>':'') + (noAns2?'<span class="tag flag">연속 무응답 2회</span>':'') + (function(){ var n=0; p.vs.forEach(function(v){ n+=(v.footprints||[]).length; }); return n ? '<span class="tag">족문지 '+n+'장</span>' : '<span class="tag">족문지 없음</span>'; })() + (p.fam.length?'<span class="tag">가족: '+esc(p.fam.map(function(id){ return (S.visits[id]||{}).name||""; }).join(", "))+'</span>':'');
+  var info = '최근 방문 '+esc(kDate(p.latest.date)) + (p.buys.length?', 구매 '+p.buys.length+'회 (마지막 '+esc(kDate(p.buys[0].date))+')':'') + (p.lastDone&&p.lastDone.score!=null?', 점수 '+p.lastDone.score+'점':'') + (lastDays!=null?', 마지막 연락 '+lastDays+'일 전':'');
+  var noteAction = na.t + (na.mkt && p.mkt!==true ? ' (마케팅 동의가 없어 이 연락은 하지 않아요)' : '');
+  var warn = '';
+  if(nonBuyer && lastDays!=null && lastDays<14) warn = '<div class="small" style="color:var(--refer);font-weight:600">2주 안에 연락했어요. 이번엔 건너뛰세요.</div>';
+  if(noAns2 && !pp.stop) warn += '<div class="small" style="color:var(--refer);font-weight:600">두 번 연속 응답이 없어요. 다음 재점검 시기까지 쉬세요.</div>';
+  var canContact = S.canWrite && p.group!=="S-noconsent" && !pp.stop;
+  var acts = '<button class="btn ghost sm" data-act="open" data-id="'+(p.lastDone||p.latest).id+'">기록</button>';
+  if(canContact){
+    acts += '<a class="btn ghost sm" href="tel:'+esc(digits(p.latest.phone))+'">전화</a>' +
+      '<button class="btn sm" data-act="logContact" data-key="'+esc(p.key)+'" data-res="answered">연락함, 응답</button>' +
+      '<button class="btn ghost sm" data-act="logContact" data-key="'+esc(p.key)+'" data-res="noanswer">연락함, 응답 없음</button>' +
+      '<button class="btn sec sm" data-act="rebook" data-id="'+p.latest.id+'">예약 만들기</button>' +
+      '<button class="btn danger sm" data-act="stopContact" data-key="'+esc(p.key)+'">연락 중단 요청</button>';
+  } else if(S.canWrite && pp.stop){
+    acts += '<button class="btn ghost sm" data-act="resumeContact" data-key="'+esc(p.key)+'">중단 해제 (고객이 원할 때만)</button>';
+  }
+  return '<div class="visit" style="grid-template-columns:1fr auto"><div><div class="n">'+esc(p.latest.name||"이름 없음")+' <span class="muted small">'+esc(p.latest.phone||"")+(p.key.indexOf("LB-")===0?', '+esc(p.key):'')+'</span></div><div class="meta">'+info+'</div><div class="tags">'+badges+'</div><div class="small" style="margin-top:6px"><b>다음 할 일</b> '+esc(noteAction)+'</div>'+warn+'</div><div class="row-actions">'+acts+'</div></div>';
+}
+function vCrm(){
+  var ps=computePeople(false), counts={};
+  GROUPS.forEach(function(g){ counts[g[0]]=0; });
+  ps.forEach(function(p){ counts[p.group]=(counts[p.group]||0)+1; if(p.fam.length) counts["S-family"]++; if(p.pp.stop) counts["S-stop"]++; });
+  counts.all=ps.length;
+  var sel=S.crmGroup;
+  var shown=ps.filter(function(p){ return sel==="all" || p.group===sel || (sel==="S-family"&&p.fam.length) || (sel==="S-stop"&&p.pp.stop); })
+    .sort(function(a,b){ return String(b.latest.date).localeCompare(String(a.latest.date)); });
+  var h = noticeHtml() + '<p class="statusline">'+esc(storeName(S.store))+' 매장 고객 <b>'+ps.length+'</b>명. 구매 <b>'+ps.filter(function(p){return p.group.charAt(0)==="B";}).length+'</b>명, 점검만 받은 분 <b>'+ps.filter(function(p){return p.group.charAt(0)==="C";}).length+'</b>명, 신규 예약 <b>'+ps.filter(function(p){return p.group.charAt(0)==="A";}).length+'</b>명.</p>';
+  if(S.canWrite) h += '<div class="toolbar"><button class="btn" data-act="importOne" data-v="buy">기존 구매 고객 등록</button><button class="btn sec" data-act="importOne" data-v="nobuy">미구매 방문 고객 등록</button><button class="btn ghost" data-act="importBulk">엑셀에서 붙여넣어 한꺼번에 등록</button></div>';
+  [["전체",["all"]],["신규",["A-booked","A-noshow"]],["구매 고객",["B-adapt","B-stable","B-recheck","B-replace","B-dormant"]],["점검만 받은 고객",["C-think","C-plan","C-size","C-notneeded","C-unknown"]],["특별 관리",["S-refer","S-noconsent","S-family","S-stop"]]].forEach(function(sec){
+    h += '<div class="small muted" style="margin:12px 0 6px;font-weight:600">'+sec[0]+'</div><div class="opts">' + sec[1].map(function(id){ var g=GROUPS.filter(function(x){return x[0]===id;})[0]; return '<button class="opt" data-act="crmGroup" data-v="'+id+'" aria-pressed="'+(sel===id)+'">'+esc(g[2])+' '+(counts[id]||0)+'</button>'; }).join("") + '</div>';
+  });
+  h += '<div class="group-h">'+esc(groupLabel(sel))+' ('+shown.length+')</div>';
+  h += shown.length ? shown.map(crmRow).join("") : '<div class="empty">이 그룹에 고객이 없어요.</div>';
+  h += '<p class="muted small" style="margin-top:16px">비구매 고객에게는 2주에 1회를 넘기지 않고, 두 번 연속 응답이 없으면 다음 재점검 시기까지 쉽니다. 광고성 연락은 마케팅 연락 동의가 있는 고객에게만 합니다.</p>';
+  return h;
+}
+function crmKpis(from, t){
+  var vs=storeVisits().filter(function(v){ return v.date>=from && v.date<=t && v.source!=="walkin" && v.status!=="cancelled"; });
+  var withCh=vs.filter(function(v){ return v.channel; }), ref=vs.filter(function(v){ return v.channel==="지인 추천"; });
+  var ps=computePeople(false), base=0, ret=0;
+  ps.forEach(function(p){
+    var done=p.vs.filter(function(v){ return v.status==="done"; }).sort(function(a,b){ return String(a.date).localeCompare(String(b.date)); });
+    var first=done[0]; if(!first || first.outcome==="buy") return;
+    if(daysBetween(first.date,t)<90 || daysBetween(first.date,t)>270) return;
+    base++;
+    if(p.vs.some(function(v){ return v.date>first.date && daysBetween(first.date,v.date)<=90 && ["arrived","checking","done"].indexOf(v.status)>=0; })) ret++;
+  });
+  var contactable=ps.filter(function(p){ return p.group!=="S-noconsent" && p.lastDone; }), stopped=contactable.filter(function(p){ return p.pp.stop; });
+  function pct(a,b){ return b ? Math.round(a/b*100) : null; }
+  return {refRate: withCh.length ? pct(ref.length, withCh.length) : null, returnRate: pct(ret, base), stopRate: pct(stopped.length, contactable.length)};
+}
+function logContact(key, res){
+  var pp=S.people[key]||{}, log=(pp.log||[]).slice(), now=new Date().toISOString();
+  log.push({at:now, res:res}); if(log.length>30) log=log.slice(-30);
+  backend.writePerson(key, {log:log, lastContactAt:now});
+  toast(res==="answered" ? "연락 기록을 남겼어요." : "응답 없음으로 기록했어요.");
+}
+
+/* ---------- footprints (족문지) ---------- */
+var FP_BUSY = {};
+function fpBlock(d, canUp){
+  var fps = Array.isArray(d.footprints) ? d.footprints : [];
+  var h = '<div class="field"><span>족문지 ('+fps.length+'장)</span>';
+  if(fps.length) h += '<div class="fpgrid">'+fps.map(function(f, k){ var u="/_blob/"+f.id, pdf=/pdf/.test(f.type||"");
+      return '<div class="fpitem"><button class="th" data-act="fpView" data-aid="'+esc(f.id)+'" data-pdf="'+(pdf?1:0)+'" aria-label="족문지 크게 보기">'+(pdf?'<span class="pdf">PDF</span>':'<img src="'+u+'" alt="족문지 '+(k+1)+'" loading="lazy">')+'</button><div>'+esc(f.at?kDate(f.at.slice(0,10)):'')+'</div>'+(S.canWrite&&S.assets?'<button class="del" data-act="fpDel" data-vid="'+esc(d.id)+'" data-k="'+k+'">삭제</button>':'')+'</div>'; }).join("")+'</div>';
+  if(d.consent===false) h += '<p class="muted small">개인정보 이용에 동의하지 않은 고객이라 족문지를 저장하지 않아요. 종이 족문지는 고객에게 드리세요.</p>';
+  else if(!canUp) {}
+  else if(S.mode!=="db") h += '<p class="muted small">족문지 사진 올리기는 claude.ai에서 열어 공유 저장에 연결됐을 때 쓸 수 있어요.</p>';
+  else if(!S.assets) h += '<p class="muted small">사진 올리기 권한을 확인하는 중이거나, 매장 담당자(Contributor 이상) 권한이 없어요.</p>';
+  else if(FP_BUSY[d.id]) h += '<p class="small"><b>올리는 중이에요…</b></p>';
+  else h += '<div class="fpup"><label class="btn sec sm">사진 찍기<input type="file" accept="image/*" capture="environment" data-fpup="'+esc(d.id)+'" aria-label="족문지 사진 찍기"></label><label class="btn ghost sm">파일에서 고르기 (여러 장)<input type="file" accept="image/*,application/pdf" multiple data-fpup="'+esc(d.id)+'" aria-label="족문지 파일 고르기"></label></div><p class="muted small" style="margin-top:6px">구매 여부와 관계없이 찍은 족문지는 모두 올려 주세요. 사진 속 이름과 연락처는 찍히지 않게 해 주세요.</p>';
+  return h + '</div>';
+}
+function shrinkImage(file){
+  return new Promise(function(resolve){
+    if(!/^image\/(jpeg|png|webp|heic|heif)/.test(file.type||"") || file.size < 2500000 || !window.createImageBitmap){ resolve(file); return; }
+    createImageBitmap(file).then(function(bmp){
+      var max=2200, sc=Math.min(1, max/Math.max(bmp.width,bmp.height)), c=document.createElement("canvas");
+      c.width=Math.round(bmp.width*sc); c.height=Math.round(bmp.height*sc);
+      c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+      c.toBlob(function(b){ resolve(b||file); }, "image/jpeg", 0.86);
+    }).catch(function(){ resolve(file); });
+  });
+}
+function fpErr(e){
+  var c=e&&e.code;
+  if(c==="too_large") return "파일이 너무 커요 (20MB까지). 사진을 다시 찍어 주세요.";
+  if(c==="unsupported_type") return "사진(JPG, PNG)이나 PDF만 올릴 수 있어요.";
+  if(c==="quota_or_state") return "사진 저장 공간이 가득 찼어요. 본사에 알려 주세요.";
+  if(c==="rate_limited") return "잠시 뒤 다시 올려 주세요.";
+  if(c==="not_granted") return "사진을 올릴 권한이 없어요.";
+  return "올리지 못했어요. 다시 시도해 주세요.";
+}
+function uploadFootprints(visitId, files){
+  var v = (S.openId===visitId && S.draft) ? S.draft : S.visits[visitId];
+  if(!v || !S.assets || !files || !files.length) return Promise.resolve();
+  if(v.consent===false){ toast("동의하지 않은 고객이라 저장하지 않아요."); return Promise.resolve(); }
+  FP_BUSY[visitId]=true; if(S.openId===visitId) renderDrawer();
+  var added=[], list=Array.prototype.slice.call(files, 0, 8);
+  return list.reduce(function(pr, f){ return pr.then(function(){
+      return shrinkImage(f).then(function(b){
+        var type = (b.type && b.type!=="") ? b.type : (/\.pdf$/i.test(f.name)?"application/pdf":"image/jpeg");
+        return S.assets.upload(b, {type:type}).then(function(r){ added.push({id:r.id, type:r.contentType, at:new Date().toISOString()}); })
+          .catch(function(e){ if(e&&e.code==="store_unavailable"){ return S.assets.upload(b,{type:type}).then(function(r){ added.push({id:r.id, type:r.contentType, at:new Date().toISOString()}); }); } throw e; });
+      });
+    }); }, Promise.resolve())
+    .catch(function(e){ toast(fpErr(e)); })
+    .then(function(){
+      delete FP_BUSY[visitId];
+      if(added.length){
+        var cur = ((S.openId===visitId && S.draft) ? S.draft : S.visits[visitId]) || {};
+        var next = (cur.footprints||[]).concat(added);
+        if(S.openId===visitId) persistDraft({footprints:next}); else backend.write(visitId, {footprints:next});
+        toast("족문지 "+added.length+"장을 올렸어요.");
+      } else if(S.openId===visitId) renderDrawer();
+    });
+}
+function deleteFootprintAt(visitId, k){
+  var cur = ((S.openId===visitId && S.draft) ? S.draft : S.visits[visitId]) || {}, fps=(cur.footprints||[]).slice(), f=fps[k];
+  if(!f) return;
+  fps.splice(k,1);
+  if(S.openId===visitId) persistDraft({footprints:fps}); else backend.write(visitId, {footprints:fps});
+  if(S.assets) S.assets.delete(f.id).catch(function(){});
+  toast("족문지를 삭제했어요.");
+}
+function deleteAllFootprints(v){ (v.footprints||[]).forEach(function(f){ if(S.assets) S.assets.delete(f.id).catch(function(){}); }); }
+
+/* ---------- stores view ---------- */
+var storeForm=null;
+function vStores(){
+  var t=todayISO(), from=t.slice(0,8)+"01", all=allStores();
+  var h = noticeHtml() + '<p class="statusline">운영 중인 매장 <b>'+activeStores().length+'</b>곳'+(all.length>activeStores().length?', 운영 중단 '+(all.length-activeStores().length)+'곳':'')+'.</p>';
+  if(S.canAdmin) h += '<div class="toolbar"><button class="btn" data-act="storeNew">새 매장 추가</button></div>';
+  else h += '<p class="notice">매장 추가와 수정은 본사 관리자(Editor 이상)만 할 수 있어요.</p>';
+  h += all.map(function(st){
+    var vs=list().filter(function(v){ return (v.store||"ktown")===st.id && v.date>=from && v.date<=t; });
+    var done=vs.filter(function(v){ return v.status==="done"; }).length, buy=vs.filter(function(v){ return v.outcome==="buy"; }).length;
+    return '<div class="storecard2'+(st.active===false?' off':'')+'"><div><div class="n">'+esc(st.name)+' <span class="tag">'+esc(st.state||"")+'</span> <span class="tag">'+esc(st.kind||"")+'</span> <span class="tag">'+esc(label(STORE_FORMAT, st.format)||st.format||"")+'</span>'+(st.active===false?' <span class="tag flag">운영 중단</span>':'')+'</div><div class="meta">'+esc([st.addr, st.city, st.state, st.zip].filter(Boolean).join(", "))+(st.phone?', '+esc(st.phone):'')+(st.owner?', 점주 '+esc(st.owner):'')+(st.opened?', 개점 '+esc(kDateY(st.opened)):'')+'</div><div class="small" style="margin-top:4px">이번 달 방문 '+vs.length+'건, 점검 완료 '+done+'명, 아치빌트인 선택 '+buy+'명</div></div><div class="row-actions">'+
+      '<button class="btn ghost sm" data-act="storeGo" data-v="'+esc(st.id)+'">이 매장 보기</button>'+(S.canAdmin?'<button class="btn sec sm" data-act="storeEdit" data-v="'+esc(st.id)+'">수정</button>':'')+'</div></div>';
+  }).join("");
+  h += '<p class="muted small" style="margin-top:16px">운영을 멈춘 매장은 지우지 않고 \'운영 중단\'으로 두어 지난 고객 기록을 보존해요.</p>';
+  return h;
+}
+function storeModal(id){
+  var st = id ? allStores().filter(function(x){ return x.id===id; })[0] : {kind:"가맹", format:"Fit Studio", state:"VA", active:true};
+  storeForm = clone(st); storeForm.id = id || null;
+  var f=storeForm;
+  openModal('<h2>'+(id?'매장 수정':'새 매장 추가')+'</h2>' +
+    '<label class="field"><span>매장 이름</span><input type="text" id="sfName" value="'+esc(f.name||"")+'" placeholder="예: 애넌데일"></label>' +
+    '<div class="grid2"><label class="field"><span>주</span><select id="sfState">'+US_STATES.map(function(x){ return '<option'+(x===f.state?' selected':'')+'>'+x+'</option>'; }).join("")+'</select></label><label class="field"><span>도시</span><input type="text" id="sfCity" value="'+esc(f.city||"")+'" placeholder="예: Annandale"></label></div>' +
+    '<label class="field"><span>주소</span><input type="text" id="sfAddr" value="'+esc(f.addr||"")+'"></label>' +
+    '<div class="grid2"><label class="field"><span>우편번호</span><input type="text" id="sfZip" inputmode="numeric" value="'+esc(f.zip||"")+'"></label><label class="field"><span>매장 전화</span><input type="tel" id="sfPhone" value="'+esc(f.phone||"")+'"></label></div>' +
+    '<div class="field"><span>운영 형태</span><div class="opts">'+STORE_KIND.map(function(k){ return '<button class="opt" data-act="sf" data-f="kind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>'; }).join("")+'</div></div>' +
+    '<div class="field"><span>매장 유형</span><div class="opts">'+STORE_FORMAT.map(function(k){ return '<button class="opt" data-act="sf" data-f="format" data-v="'+k[0]+'" aria-pressed="'+(f.format===k[0])+'">'+k[1]+'</button>'; }).join("")+'</div></div>' +
+    '<div class="grid2"><label class="field"><span>점주 또는 책임자</span><input type="text" id="sfOwner" value="'+esc(f.owner||"")+'"></label><label class="field"><span>개점일</span><input type="date" id="sfOpened" value="'+esc(f.opened||"")+'"></label></div>' +
+    '<label class="field"><span>영업시간</span><input type="text" id="sfHours" value="'+esc(f.hours||"")+'" placeholder="예: 매일 10:00~19:00"></label>' +
+    (id?'<label class="check"><input type="checkbox" id="sfActive"'+(f.active!==false?' checked':'')+'><span>운영 중 (끄면 매장 선택 목록에서 빠지고 기록은 남아요)</span></label>':'') +
+    '<p class="err small" id="sfErr" style="color:var(--refer);min-height:1.2em"></p>' +
+    '<div class="act"><button class="btn ghost" data-act="mclose">취소</button><button class="btn" data-act="sfSave">저장</button></div>');
+}
+function saveStoreForm(){
+  var f=storeForm, v=function(id){ return (byId(id)||{}).value||""; };
+  var name=v("sfName").trim(); if(!name){ byId("sfErr").textContent="매장 이름을 적어 주세요."; return; }
+  var id = f.id || ("st"+Date.now().toString(36));
+  var data={name:name, state:v("sfState"), city:v("sfCity").trim(), addr:v("sfAddr").trim(), zip:v("sfZip").trim(), phone:v("sfPhone").trim(), kind:f.kind||"가맹", format:f.format||"Fit Studio", owner:v("sfOwner").trim(), opened:v("sfOpened"), hours:v("sfHours").trim(), active: f.id ? !!(byId("sfActive")&&byId("sfActive").checked) : true};
+  if(!f.id){ data.createdAt=new Date().toISOString(); data.order=allStores().length+1; }
+  backend.writeStore(id, data); closeModal();
+  if(!f.id){ S.store=id; try{ localStorage.setItem("lebal_dash_store",id); }catch(e){} toast(name+" 매장을 추가했어요. 지금 이 매장으로 바꿨어요."); renderAll(); } else toast("매장 정보를 저장했어요.");
+}
+
+/* ---------- register existing / non-buying customers ---------- */
+var impForm=null;
+function existingByPhone(phone){ var d=digits(phone); if(d.length<7) return []; return list().filter(function(o){ return digits(o.phone)===d; }).sort(function(a,b){ return String(b.date).localeCompare(String(a.date)); }); }
+function importModal(kind){
+  impForm={kind:kind, store:S.store, pay:"card", outcome:"card", reason:null, channel:"기존 고객"};
+  renderImportModal();
+}
+function renderImportModal(){
+  var f=impForm, buy=f.kind==="buy", t=todayISO();
+  var stOpts = activeStores().map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id===f.store?' selected':'')+'>'+esc(storeLabel(x))+'</option>'; }).join("");
+  openModal('<h2>'+(buy?'기존 구매 고객 등록':'미구매 방문 고객 등록')+'</h2><p class="muted small">대시보드를 쓰기 전에 방문했던 고객이나, 종이로만 기록해 둔 고객을 옮겨 적어요.</p>' +
+    '<div class="opts" style="margin-top:10px">'+[["buy","구매 고객"],["nobuy","미구매 방문 고객"]].map(function(k){ return '<button class="opt" data-act="impKind" data-v="'+k[0]+'" aria-pressed="'+(f.kind===k[0])+'">'+k[1]+'</button>'; }).join("")+'</div>' +
+    '<div class="grid2"><label class="field"><span>이름</span><input type="text" id="imName" value="'+esc(f.name||"")+'"></label><label class="field"><span>연락처</span><input type="tel" id="imPhone" value="'+esc(f.phone||"")+'"></label></div>' +
+    '<p class="small" id="imDup" style="min-height:1.2em"></p>' +
+    '<div class="grid2"><label class="field"><span>방문일</span><input type="date" id="imDate" max="'+t+'" value="'+esc(f.date||"")+'"></label><label class="field"><span>매장</span><select id="imStore">'+stOpts+'</select></label></div>' +
+    (buy ? '<div class="grid2"><label class="field"><span>모델</span><select id="imModel">'+MODELS.map(function(m){ return '<option'+(f.model===m[0]?' selected':'')+'>'+m[0]+'</option>'; }).join("")+'</select></label><label class="field"><span>사이즈</span><select id="imSize">'+SIZES.map(function(x){ return '<option'+((f.size||"8")===x?' selected':'')+'>'+x+'</option>'; }).join("")+'</select></label></div>' +
+        '<div class="grid2"><label class="field"><span>가격 ($)</span><input type="number" id="imPrice" min="0" value="'+esc(f.price!=null?f.price:"")+'"></label><div class="field"><span>결제</span><div class="opts">'+PAY.map(function(p){ return '<button class="opt" data-act="impSet" data-f="pay" data-v="'+p[0]+'" aria-pressed="'+(f.pay===p[0])+'">'+p[1]+'</button>'; }).join("")+'</div></div></div>'
+      : '<div class="field"><span>그때 고객의 선택</span><div class="opts">'+IMPORT_OUT.map(function(o){ return '<button class="opt" data-act="impSet" data-f="outcome" data-v="'+o[0]+'" aria-pressed="'+(f.outcome===o[0])+'">'+o[1]+'</button>'; }).join("")+'</div></div>' +
+        (f.outcome!=="refer" ? '<div class="field"><span>사지 않은 이유</span><div class="opts">'+REASONS.map(function(r){ return '<button class="opt" data-act="impSet" data-f="reason" data-v="'+r[0]+'" aria-pressed="'+(f.reason===r[0])+'">'+r[1]+'</button>'; }).join("")+'</div></div>' : '')) +
+    '<div class="grid2"><label class="field"><span>Balance Score (있으면)</span><input type="number" id="imScore" min="0" max="100" value="'+esc(f.score!=null?f.score:"")+'"></label><label class="field"><span>Footprint ID (카드에 있으면)</span><input type="text" id="imFid" value="'+esc(f.fid||"")+'" placeholder="없으면 자동 생성"></label></div>' +
+    '<div class="field"><span>알게 된 경로</span><div class="opts">'+CHANNELS.map(function(c){ return '<button class="opt" data-act="impSet" data-f="channel" data-v="'+esc(c)+'" aria-pressed="'+(f.channel===c)+'">'+esc(c)+'</button>'; }).join("")+'</div></div>' +
+    '<label class="field"><span>메모</span><input type="text" id="imMemo" value="'+esc(f.memo||"")+'"></label>' +
+    '<label class="check"><input type="checkbox" id="imConsent"'+(f.consent!==false?' checked':'')+'><span>이 고객에게 개인정보 이용 동의를 받았어요. (받지 않았으면 체크를 풀어 주세요. 이름과 연락처만 남고 연락하지 않아요.)</span></label>' +
+    '<label class="check"><input type="checkbox" id="imMkt"'+(f.mkt?' checked':'')+'><span>마케팅 연락(신발 소식, 초대권)에도 동의했어요.</span></label>' +
+    (S.assets && S.mode==="db" ? '<label class="field"><span>족문지 사진 (선택, 여러 장)</span><input type="file" id="imFiles" accept="image/*,application/pdf" multiple></label>' : '<p class="muted small" style="margin-top:12px">족문지 사진은 등록한 뒤 고객 기록에서 올릴 수 있어요.</p>') +
+    '<p class="err small" id="imErr" style="color:var(--refer);min-height:1.2em"></p>' +
+    '<div class="act"><button class="btn ghost" data-act="mclose">취소</button><button class="btn sec" data-act="impSave" data-more="1">저장하고 한 명 더</button><button class="btn" data-act="impSave">저장</button></div>');
+  updateDup();
+}
+function readImportFields(){
+  var f=impForm, g=function(id){ var e=byId(id); return e ? e.value : undefined; };
+  ["name","phone","date","memo","fid"].forEach(function(k){ var v=g("im"+k.charAt(0).toUpperCase()+k.slice(1)); if(v!==undefined) f[k]=v.trim(); });
+  if(g("imStore")!==undefined) f.store=g("imStore");
+  if(g("imModel")!==undefined) f.model=g("imModel");
+  if(g("imSize")!==undefined) f.size=g("imSize");
+  if(g("imPrice")!==undefined) f.price = g("imPrice")==="" ? null : +g("imPrice");
+  if(g("imScore")!==undefined) f.score = g("imScore")==="" ? null : Math.max(0, Math.min(100, Math.round(+g("imScore"))));
+  var c=byId("imConsent"); if(c) f.consent=c.checked; var m=byId("imMkt"); if(m) f.mkt=m.checked;
+}
+function updateDup(){
+  var el=byId("imDup"), ph=byId("imPhone"); if(!el||!ph) return;
+  var ex=existingByPhone(ph.value);
+  el.textContent = ex.length ? ("이미 기록이 있는 고객이에요 ("+ex[0].name+", 방문 "+ex.length+"회). 새 방문 기록으로 더해지고 같은 고객으로 묶여요.") : "";
+}
+function buildImportedVisit(f){
+  var t=todayISO(), buy=f.kind==="buy", ex=existingByPhone(f.phone), oldFid=(ex.filter(function(o){ return o.fid; })[0]||{}).fid;
+  var v={store:f.store||S.store, date:f.date, time:"", name:f.name, phone:f.phone, who:"self", focus:[], source:"import", imported:true, status:"done",
+    channel:f.channel||null, memo:f.memo||"", consent:f.consent!==false, marketingConsent:f.consent!==false && !!f.mkt, recheckMonths:5, createdAt:new Date().toISOString(), doneAt:new Date().toISOString()};
+  if(buy){
+    v.outcome="buy"; var m=MODELS.filter(function(x){ return x[0]===f.model; })[0];
+    v.purchase={model:f.model||"기타", size:f.size||"", price:f.price!=null?f.price:(m&&m[1]!=null?m[1]:null), pay:f.pay||null};
+  } else { v.outcome=f.outcome||"card"; if(v.outcome!=="refer" && f.reason) v.noBuyReason=f.reason; }
+  if(v.consent){
+    v.fid = (f.fid||"").toUpperCase() || oldFid || makeFid();
+    if(f.score!=null){ v.score=f.score; v.band=bandOf(f.score, v.outcome==="refer"); }
+    else if(v.outcome==="refer") v.band="refer";
+    if(v.outcome==="refer") v.redFlag=true;
+    v.recheck={due:addMonths(f.date,5), done:false};
+    if(buy){ var due=addDays(f.date,7); v.d7={due:due, done: due<t, skipped: due<t}; }
+  }
+  return v;
+}
+function saveImport(more){
+  readImportFields();
+  var f=impForm, err=byId("imErr");
+  if(!f.name){ err.textContent="이름을 적어 주세요."; return; }
+  if(digits(f.phone).length<7){ err.textContent="연락처를 적어 주세요."; return; }
+  if(!f.date){ err.textContent="방문일을 골라 주세요."; return; }
+  if(f.date>todayISO()){ err.textContent="방문일은 오늘이나 지난 날짜여야 해요. 앞으로의 방문은 예약으로 추가하세요."; return; }
+  var files = byId("imFiles") ? byId("imFiles").files : null, fileList = files && files.length ? Array.prototype.slice.call(files) : null;
+  var id=newId(), v=buildImportedVisit(f);
+  backend.write(id, v, true).then(function(){ if(fileList && v.consent) uploadFootprints(id, fileList); });
+  toast(f.name+" 고객을 등록했어요.");
+  if(more){ var keep={kind:f.kind, store:f.store, date:f.date, pay:f.pay, outcome:f.outcome, channel:f.channel}; impForm=Object.assign({consent:true}, keep); renderImportModal(); var n=byId("imName"); if(n) n.focus(); }
+  else closeModal();
+}
+
+/* ---- bulk paste from Excel ---- */
+var bulkRows=[];
+function parseDate(x){
+  x=String(x||"").trim(); var m;
+  if((m=x.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})$/))) return m[1]+"-"+pad(+m[2])+"-"+pad(+m[3]);
+  if((m=x.match(/^(\d{1,2})[-\/.](\d{1,2})[-\/.](\d{2,4})$/))){ var y=+m[3]; if(y<100) y+=2000; return y+"-"+pad(+m[1])+"-"+pad(+m[2]); }
+  return null;
+}
+function parseBulk(text){
+  var lines=String(text||"").split(/\r?\n/).filter(function(l){ return l.trim(); });
+  var out=[];
+  lines.forEach(function(l, i){
+    var c = l.indexOf("\t")>=0 ? l.split("\t") : l.split(",");
+    c=c.map(function(x){ return x.trim(); });
+    if(i===0 && /이름|name/i.test(c[0])) return;
+    var kindRaw=(c[3]||"").replace(/\s/g,""), buy=/^(구매|y|yes|o|buy|예)$/i.test(kindRaw), nobuy=/^(미구매|n|no|x|아니오|아니요)$/i.test(kindRaw);
+    var r={name:c[0]||"", phone:c[1]||"", date:parseDate(c[2]), kind: buy?"buy":"nobuy", model:c[4]||"", size:c[5]||"", price:(c[6]||"").replace(/[^\d.]/g,""), memo:c[7]||"", errs:[]};
+    if(!r.name) r.errs.push("이름 없음");
+    if(digits(r.phone).length<7) r.errs.push("연락처");
+    if(!r.date) r.errs.push("방문일 형식");
+    else if(r.date>todayISO()) r.errs.push("미래 날짜");
+    if(!buy && !nobuy) r.errs.push("구분은 구매 또는 미구매");
+    if(buy && MODELS.every(function(m){ return m[0].toUpperCase()!==r.model.toUpperCase(); })) r.modelNote=true;
+    out.push(r);
+  });
+  return out;
+}
+function bulkModal(){
+  bulkRows=[];
+  var stOpts = activeStores().map(function(x){ return '<option value="'+esc(x.id)+'"'+(x.id===S.store?' selected':'')+'>'+esc(storeLabel(x))+'</option>'; }).join("");
+  openModal('<h2>엑셀에서 붙여넣어 한꺼번에 등록</h2>' +
+    '<p class="small">엑셀이나 구글 시트에서 아래 순서의 열을 복사해 그대로 붙여넣으세요. 첫 줄이 제목이면 건너뛰어요.</p>' +
+    '<p class="small" style="font-family:monospace;background:var(--surface);padding:8px 10px;border-radius:6px">이름 | 연락처 | 방문일 | 구분(구매/미구매) | 모델 | 사이즈 | 가격 | 메모<br>김영희 | 213-555-0101 | 2026-03-14 | 구매 | M808 | 8 | 350 | 단골<br>박철수 | 714-555-0199 | 4/2/2026 | 미구매 | | | | 가족과 상의</p>' +
+    '<label class="field"><span>붙여넣기</span><textarea id="bkText" style="min-height:140px" placeholder="여기에 붙여넣으세요"></textarea></label>' +
+    '<label class="field"><span>매장</span><select id="bkStore">'+stOpts+'</select></label>' +
+    '<label class="check"><input type="checkbox" id="bkConsent"><span>여기 있는 모든 고객에게 개인정보 이용 동의를 받았어요. (체크하지 않으면 이름과 연락처만 남고 연락하지 않아요.)</span></label>' +
+    '<div id="bkPrev"></div>' +
+    '<div class="act"><button class="btn ghost" data-act="mclose">취소</button><button class="btn sec" data-act="bkCheck">확인하기</button><button class="btn" data-act="bkSave" id="bkSave" disabled>등록하기</button></div>');
+}
+function bulkPreview(){
+  bulkRows=parseBulk((byId("bkText")||{}).value);
+  var ok=bulkRows.filter(function(r){ return !r.errs.length; });
+  var h = '<p class="small" style="margin-top:10px"><b>'+bulkRows.length+'</b>줄 중 <b>'+ok.length+'</b>명 등록 가능'+(bulkRows.length-ok.length?', <span style="color:var(--refer)">'+(bulkRows.length-ok.length)+'줄은 고쳐야 해요</span>':'')+'.</p>';
+  if(bulkRows.length) h += '<table class="prev"><tr><th>이름</th><th>연락처</th><th>방문일</th><th>구분</th><th>모델, 사이즈</th><th>확인</th></tr>'+bulkRows.slice(0,60).map(function(r){ return '<tr'+(r.errs.length?' class="bad"':'')+'><td>'+esc(r.name)+'</td><td>'+esc(r.phone)+'</td><td>'+esc(r.date||"")+'</td><td>'+(r.kind==="buy"?"구매":"미구매")+'</td><td>'+esc([r.model,r.size].filter(Boolean).join(" "))+'</td><td>'+(r.errs.length?esc(r.errs.join(", ")):(r.modelNote?'모델명 확인':'좋아요'))+'</td></tr>'; }).join("")+'</table>'+(bulkRows.length>60?'<p class="muted small">처음 60줄만 보여요.</p>':'');
+  byId("bkPrev").innerHTML=h;
+  var b=byId("bkSave"); if(b){ b.disabled=!ok.length; b.textContent=ok.length?ok.length+"명 등록하기":"등록하기"; }
+}
+function bulkSave(){
+  var ok=bulkRows.filter(function(r){ return !r.errs.length; }); if(!ok.length) return;
+  var store=(byId("bkStore")||{}).value||S.store, consent=!!(byId("bkConsent")&&byId("bkConsent").checked);
+  var ps=ok.map(function(r){
+    var m=MODELS.filter(function(x){ return x[0].toUpperCase()===r.model.toUpperCase(); })[0];
+    var v=buildImportedVisit({kind:r.kind, name:r.name, phone:r.phone, date:r.date, store:store, model:m?m[0]:(r.model?"기타":"기타"), size:r.size, price:r.price===""?null:+r.price, memo:(m||!r.model?r.memo:("모델 "+r.model+(r.memo?", "+r.memo:""))), consent:consent, mkt:false, channel:"기존 고객", outcome:"card"});
+    return backend.write(newId(), v, true);
+  });
+  closeModal(); toast(ok.length+"명을 등록하고 있어요.");
+  Promise.all(ps).then(function(){ toast(ok.length+"명 등록을 마쳤어요."); S.tab="crm"; renderAll(); });
+}
+
+/* ---------- drawer (visit workflow) ---------- */
+function openVisit(id, step){
+  var v=S.visits[id]; if(!v) return;
+  S.openId=id; S.draft=clone(v); S.step = step!=null ? step : (v.status==="done" ? 7 : 0);
+  if(S.canWrite && v.status==="arrived"){ persistDraft({status:"checking"}); }
+  renderDrawer();
+}
+function closeVisit(){ S.openId=null; S.draft=null; byId("drawer").hidden=true; renderAll(); }
+function optBtns(field, opts, cur, multi){
+  return '<div class="opts" role="group">'+opts.map(function(o){ var v=Array.isArray(o)?o[0]:o, t=Array.isArray(o)?o[1]:o; var on = multi ? (Array.isArray(cur)&&cur.indexOf(v)>=0) : cur===v; return '<button class="opt" data-act="dset" data-f="'+field+'" data-v="'+esc(v)+'" data-multi="'+(multi?1:0)+'" aria-pressed="'+on+'"'+(S.canWrite?'':' disabled')+'>'+esc(t)+'</button>'; }).join("")+'</div>';
+}
+function flagBox(d){
+  var sf=d.safety||{}, items=[];
+  if(sf.diabetes&&sf.numb) items.push("당뇨와 발 감각 저하: 눈 감고 서기, 한 발 서기 생략. 족부 전문의 상담 권유.");
+  if(sf.wound) items.push("낫지 않는 상처: 맨발 족압 점검 생략, 상처를 만지지 않기. 전문의 상담 권유.");
+  if(sf.rapid) items.push("최근 빠른 변화: 결과 설명 뒤 전문의 상담을 먼저 권유.");
+  if(sf.fall2) items.push("반복 낙상이나 낙상 부상: 균형 테스트는 1~2번 자세까지만. 주치의 상담 권유.");
+  if(!items.length) return '';
+  return '<div class="flagbox"><b>위험 신호가 있어요. 판매보다 전문가 안내가 먼저예요.</b><ul>'+items.map(function(i){return '<li>'+esc(i)+'</li>';}).join("")+'</ul><p class="small" style="margin:8px 0 0">"오늘 점검은 여기까지 하고, 발 상태는 족부 전문의 선생님께 먼저 보여 드리면 좋겠어요."</p></div>';
+}
+function stepBody(i, d){
+  var h = '<p class="script"><small>대사</small>"'+esc(SCRIPTS[i])+'"</p>';
+  var dis = S.canWrite ? '' : ' disabled';
+  if(i===0){
+    var hist=historyOf(d);
+    if(d.imported) h += '<p class="notice">직접 등록한 지난 방문 기록이에요. 필요한 단계만 눌러 고치거나 족문지를 올리세요.</p>';
+    h += webBox(d);
+    h += '<table class="sumtable"><tr><th>예약</th><td>'+esc(kDate(d.date))+' '+esc(d.time||"")+', '+esc(label(SOURCE,d.source)||"")+'</td></tr><tr><th>오시는 분</th><td>'+esc(label(WHO,d.who)||"본인")+'</td></tr><tr><th>보고 싶은 것</th><td>'+esc((d.focus||[]).join(", ")||"없음")+'</td></tr><tr><th>예약 메모</th><td>'+esc(d.memo||"")+'</td></tr></table>';
+    if(hist.length){
+      var last=hist[0];
+      h += '<div class="notice"><b>재점검 고객이에요.</b> 지난 방문 '+esc(kDate(last.date))+(last.score!=null?', '+last.score+'점 ('+esc(BANDS[last.band]?BANDS[last.band].ko:"")+')':'')+'. "지난번 기록부터 이어서 볼게요."로 시작하세요.'+(last.fid&&!d.fid&&S.canWrite?'<div class="toolbar"><button class="btn sec sm" data-act="adoptFid" data-fid="'+esc(last.fid)+'">이 고객의 Footprint ID '+esc(last.fid)+' 이어 쓰기</button></div>':'')+'</div>';
+    }
+    h += '<label class="field"><span>이름</span><input type="text" data-dfield="name" value="'+esc(d.name||"")+'"'+dis+'></label><label class="field"><span>연락처</span><input type="tel" data-dfield="phone" value="'+esc(d.phone||"")+'"'+dis+'></label>';
+    var mine=d.familyIds||[], others=list().filter(function(o){ return o.id!==d.id && o.date===d.date && (o.store||"ktown")===(d.store||"ktown") && o.status!=="cancelled"; });
+    var far=mine.filter(function(id){ return !others.some(function(o){ return o.id===id; }) && S.visits[id]; });
+    h += '<div class="field"><span>함께 온 가족 연결</span>' + (others.length ? '<div class="opts">'+others.map(function(o){ return '<button class="opt" data-act="famToggle" data-oid="'+o.id+'" aria-pressed="'+(mine.indexOf(o.id)>=0)+'"'+dis+'>'+esc(o.name||"")+' '+esc(o.time||"")+'</button>'; }).join("")+'</div>' : '<p class="muted small" style="margin:0">오늘 같은 매장 예약 중 연결할 분이 없어요.</p>') +
+      (far.length ? '<div class="opts" style="margin-top:8px">'+far.map(function(id){ return '<button class="opt" data-act="famToggle" data-oid="'+id+'" aria-pressed="true"'+dis+'>'+esc(S.visits[id].name||"")+' (다른 날)</button>'; }).join("")+'</div>' : '') +
+      (S.canWrite ? '<div class="tryrow" style="grid-template-columns:1fr auto;margin-top:8px"><input type="tel" id="famPhone" placeholder="다른 날 방문한 가족의 연락처"><button class="btn sec sm" data-act="famPhone">찾아서 연결</button></div>' : '') + '</div>';
+  }
+  if(i===1){
+    h += '<div class="field"><span>개인정보 이용과 연락 동의</span>'+optBtns("consent",[["yes","동의함"],["no","동의 안 함"]], d.consent===true?"yes":d.consent===false?"no":null, false)+'</div>';
+    if(d.consent===true) h += '<div class="field"><span>마케팅 연락 동의 (신발 소식, 이벤트, 초대권)</span>'+optBtns("marketingConsent",[["yes","동의함"],["no","동의 안 함"]], d.marketingConsent===true?"yes":d.marketingConsent===false?"no":null, false)+'<p class="muted small" style="margin-top:6px">예약 안내와 재점검 연락과는 따로 받아요. 광고성 문자는 이 동의가 있을 때만 보내요.</p></div>';
+    if(d.consent===false) h += '<p class="notice">동의하지 않으셨어요. 점검은 그대로 해 드리되, 결과는 종이 카드로만 드리고 저장하지 않아요. 재점검 연락도 하지 않아요.</p>';
+    h += '<div class="field"><span>안전 질문</span></div>' + SAFETY.map(function(q){ var cur=(d.safety||{})[q[0]]; return '<div class="qrow"><p>'+esc(q[1])+'</p><div class="yn"><button data-act="safety" data-k="'+q[0]+'" data-v="0" aria-pressed="'+(cur===false)+'"'+dis+'>아니요</button><button data-act="safety" data-k="'+q[0]+'" data-v="1" aria-pressed="'+(cur===true)+'"'+dis+'>예</button></div></div>'; }).join("");
+    h += flagBox(d);
+  }
+  if(i===2){
+    var sf=d.safety||{}, p=d.pressure||{};
+    if(sf.wound) h += '<div class="flagbox"><b>상처가 있어 맨발 족압 점검은 생략해요.</b></div>';
+    h += '<p class="notice">화면을 고객 쪽으로 돌리고, 5초간 말하지 않고 고객이 먼저 보게 하세요.</p>';
+    h += '<div class="field"><span>체중이 주로 실리는 곳</span>'+optBtns("pressure.shift", SHIFT, p.shift, true)+'</div>';
+    h += '<div class="field"><span>아치 부위가 닿는 정도</span>'+optBtns("pressure.arch", ARCH, p.arch, false)+'</div>';
+    h += '<label class="field"><span>고객이 한 말, 메모</span><textarea data-dfield="pressure.note"'+dis+'>'+esc(p.note||"")+'</textarea></label>';
+    h += fpBlock(d, S.canWrite);
+  }
+  if(i===3){
+    var st=Array.isArray(d.stances)?d.stances:[null,null,null,null,null], locked=lockedStances(d.safety);
+    h += '<p class="muted small">각 자세 최대 10초. 흔들림이 크면 다음 자세로 넘어가지 않아요. 직원은 손이 닿는 거리에서 대기해요.</p>';
+    h += STANCES.map(function(nm, k){
+      var v=st[k], isLocked=locked.indexOf(k)>=0, skipped = v==="skip" || isLocked;
+      var ctl = isLocked ? '<span class="tag flag">위험 신호로 생략</span>' :
+        [0,3,5,7,10].map(function(s){ return '<button class="opt" data-act="stance" data-k="'+k+'" data-v="'+s+'" aria-pressed="'+(v===s)+'"'+dis+'>'+s+'초</button>'; }).join("") +
+        '<input type="number" min="0" max="10" step="0.5" data-stance="'+k+'" value="'+(typeof v==="number"?v:"")+'" aria-label="'+esc(nm)+' 초"'+dis+'>' +
+        '<button class="opt" data-act="stance" data-k="'+k+'" data-v="skip" aria-pressed="'+(v==="skip")+'"'+dis+'>생략</button>';
+      return '<div class="stance'+(skipped?' skip':'')+'"><span class="k">'+(k+1)+'</span><div><span class="nm">'+esc(nm)+'</span><div class="ctl">'+ctl+'</div></div></div>';
+    }).join("");
+    var sc=calcScore(st.map(function(x){return typeof x==="number"?x:null;})), bd=bandOf(sc, redFlagOf(d.safety));
+    h += '<div class="scorebox"><span class="s">'+(sc==null?"-":sc)+'</span><span class="b">'+(bd?BANDS[bd].ko+' <span class="muted small">'+BANDS[bd].en+'</span>':'')+'</span></div><p class="muted small">임시 계산식: 다섯 자세 각각 10초 유지 = 20점, 생략 = 0점. 위험 신호가 있으면 한 발 서기 세 가지는 자동으로 생략돼요.</p>';
+  }
+  if(i===4){
+    var bd2=d.band;
+    if(d.consent===false) h += '<p class="notice">동의하지 않아 Footprint ID를 만들지 않고, 결과는 종이 카드로만 드려요.</p>';
+    h += '<div class="scorebox"><span class="s">'+(d.score==null?"-":d.score)+'</span><span class="b">'+(bd2?BANDS[bd2].ko+' <span class="muted small">'+BANDS[bd2].en+'</span>':'균형 테스트를 먼저 기록하세요')+'</span></div>';
+    if(bd2) h += '<p>'+esc(BANDS[bd2].line)+'</p>';
+    h += flagBox(d);
+    h += '<table class="sumtable"><tr><th>Footprint ID</th><td>'+esc(d.fid||(d.consent===false?"만들지 않음":"결과 화면에서 자동 생성"))+'</td></tr><tr><th>체중이 실리는 곳</th><td>'+esc(((d.pressure||{}).shift||[]).join(", ")||"기록 없음")+'</td></tr><tr><th>아치 부위</th><td>'+esc((d.pressure||{}).arch||"기록 없음")+'</td></tr></table>';
+    h += '<div class="toolbar"><button class="btn sec" data-act="card">결과 카드 보기, 인쇄</button></div>';
+  }
+  if(i===5){
+    if(d.redFlag) h += '<div class="flagbox"><b>위험 신호 고객에게는 착화 체험을 먼저 권하지 않아요.</b> 고객이 원할 때만 진행하세요.</div>';
+    h += '<p class="notice">본사 기준이 확정될 때까지는 고객이 원할 때만 착화 체험을 제안해요. 지금 신발로 족압판에 다시 선 뒤, 아치빌트인으로 같은 측정을 해서 나란히 보여 주세요.</p>';
+    var tried=Array.isArray(d.tried)?d.tried:[];
+    h += tried.map(function(t, k){ return '<div class="tryrow"><select data-try="'+k+'" data-tf="model"'+dis+'>'+MODELS.map(function(m){return '<option'+(t.model===m[0]?' selected':'')+'>'+m[0]+'</option>';}).join("")+'</select><select data-try="'+k+'" data-tf="size"'+dis+'>'+SIZES.map(function(s){return '<option'+(t.size===s?' selected':'')+'>'+s+'</option>';}).join("")+'</select><input type="text" data-try="'+k+'" data-tf="feel" placeholder="고객이 말한 느낌" value="'+esc(t.feel||"")+'"'+dis+'><button class="btn ghost sm" data-act="tryDel" data-k="'+k+'"'+dis+'>빼기</button></div>'; }).join("");
+    if(S.canWrite) h += '<div class="toolbar"><button class="btn sec sm" data-act="tryAdd">신어 본 모델 추가</button></div>';
+  }
+  if(i===6){
+    h += '<div class="field"><span>고객의 선택</span>'+optBtns("outcome", OUTCOMES, d.outcome, false)+'</div>';
+    if(d.outcome==="card" || d.outcome==="plan") h += '<div class="field"><span>선택하지 않은 이유</span>'+optBtns("noBuyReason", REASONS, d.noBuyReason, false)+'</div>';
+    h += '<label class="check"><input type="checkbox" data-dcheck="priceTold"'+(d.priceTold?' checked':'')+dis+'><span>가격과 교환과 환불 조건을 고르기 전에 안내했어요.</span></label>';
+    if(d.outcome==="buy"){
+      var pu=d.purchase||{};
+      h += '<div class="tryrow" style="grid-template-columns:1fr 1fr 1fr"><select data-pf="model"'+dis+'>'+MODELS.map(function(m){return '<option'+(pu.model===m[0]?' selected':'')+'>'+m[0]+'</option>';}).join("")+'</select><select data-pf="size"'+dis+'>'+SIZES.map(function(s){return '<option'+(pu.size===s?' selected':'')+'>'+s+'</option>';}).join("")+'</select><input type="number" data-pf="price" min="0" step="1" placeholder="가격 $" value="'+(pu.price!=null?pu.price:"")+'"'+dis+'></div>';
+      h += '<div class="field"><span>결제</span>'+optBtns("purchase.pay", PAY, pu.pay, false)+'</div>';
+      if(pu.pay==="otc") h += '<p class="notice">아스티바 OTC는 고객의 플랜 혜택을 확인한 뒤에만 받아요. "보험으로 산다", "CMS 승인"이라고 말하지 않아요.</p>';
+      h += '<label class="check"><input type="checkbox" data-dcheck="adaptTold"'+(d.adaptTold?' checked':'')+dis+'><span>"처음 1~2주는 하루 몇 시간씩 신으며 익숙해지세요" 안내와 7일차 전화 일정을 드렸어요.</span></label>';
+    }
+    h += '<p class="muted small" style="margin-top:14px">하지 않는 것: 오늘만 가격, 한정 수량 압박, 거절 뒤 다시 권하기, 다른 직원 불러 재설득하기.</p>';
+  }
+  if(i===7){
+    var rm = d.recheckMonths||5;
+    h += '<table class="sumtable"><tr><th>점수</th><td>'+(d.score!=null?d.score+'점 '+esc(BANDS[d.band]?BANDS[d.band].ko:""):"기록 없음")+'</td></tr><tr><th>선택</th><td>'+esc(label(OUTCOMES,d.outcome)||"아직 없음")+'</td></tr>'+(d.outcome==="buy"?'<tr><th>구매</th><td>'+esc(((d.purchase||{}).model||"")+" "+((d.purchase||{}).size||""))+(d.purchase&&d.purchase.price!=null?', $'+d.purchase.price:'')+'</td></tr><tr><th>7일차 전화</th><td>'+esc(kDate(addDays(d.date,7)))+'</td></tr>':'')+'</table>';
+    if(d.consent!==false){ h += '<div class="field"><span>재점검 권장 시기</span>'+optBtns("recheckMonths",[["3","3개월 뒤"],["4","4개월 뒤"],["5","5개월 뒤 (기본)"]], String(rm), false)+'</div><p class="small">'+esc(kDateY(addMonths(d.date, +rm)))+' 무렵 재점검 초대가 후속 연락에 올라와요.</p>'; }
+    h += fpBlock(d, S.canWrite);
+    h += '<label class="field"><span>마무리 메모</span><textarea data-dfield="notes"'+dis+'>'+esc(d.notes||"")+'</textarea></label>';
+    if(S.canWrite) h += '<div class="toolbar"><button class="btn" data-act="finish"'+(d.outcome?'':' disabled')+'>'+(d.status==="done"?"기록 다시 저장":"점검 완료")+'</button>'+(d.outcome?'':'<span class="muted small">고객의 선택을 먼저 기록하세요.</span>')+'</div>';
+  }
+  return h;
+}
+function renderDrawer(){
+  var dr=byId("drawer");
+  if(!S.openId || !S.draft){ dr.hidden=true; return; }
+  var d=S.draft, ae=document.activeElement, keep=null, oldPb=byId("panelBody"), scroll=(oldPb&&S._lastStep===S.step)?oldPb.scrollTop:0;
+  if(ae && dr.contains(ae) && ae.dataset){ ["dfield","stance","try","pf"].some(function(k){ if(ae.dataset[k]!=null){ keep={k:k, v:ae.dataset[k], tf:ae.dataset.tf, pos:(typeof ae.selectionStart==="number"?ae.selectionStart:null)}; return true; } return false; }); }
+  dr.hidden=false;
+  dr.innerHTML = '<div class="panel" role="dialog" aria-modal="true" aria-label="'+esc(d.name||"고객")+' 점검"><div class="panel-h"><div class="who"><div><div class="nm">'+esc(d.name||"이름 없음")+' <span class="pill '+esc(d.status)+'">'+esc(STATUS[d.status]||"")+'</span></div><div class="muted small">'+esc(kDate(d.date))+' '+esc(d.time||"")+(d.fid?', '+esc(d.fid):'')+(d.redFlag?', <b style="color:var(--refer)">위험 신호</b>':'')+'</div></div><button class="iconbtn" data-act="close" aria-label="닫기">✕</button></div><div class="steps">'+STEP_NAMES.map(function(n,i){ return '<button data-act="step" data-v="'+i+'"'+(S.step===i?' aria-current="step"':'')+(i<S.step?' class="visited"':'')+'>'+(i+1)+'. '+n+'</button>'; }).join("")+'</div></div><div class="panel-b" id="panelBody">'+stepBody(S.step, d)+'</div><div class="panel-f"><button class="btn ghost" data-act="step" data-v="'+Math.max(0,S.step-1)+'"'+(S.step===0?' disabled':'')+'>이전</button>'+(S.step<7?'<button class="btn" data-act="step" data-v="'+(S.step+1)+'">다음</button>':'<button class="btn ghost" data-act="close">닫기</button>')+'</div></div>';
+  var pb=byId("panelBody"); if(pb) pb.scrollTop=scroll; S._lastStep=S.step;
+  if(keep){ var sel='[data-'+keep.k+'="'+keep.v+'"]'+(keep.tf?'[data-tf="'+keep.tf+'"]':''); var n=dr.querySelector(sel); if(n){ n.focus(); if(keep.pos!=null){ try{ n.setSelectionRange(keep.pos,keep.pos); }catch(e){} } } }
+}
+function setPath(obj, path, val){ var ks=path.split("."), o={}, cur=o; ks.forEach(function(k,i){ if(i===ks.length-1) cur[k]=val; else { cur[k]={}; cur=cur[k]; } }); return o; }
+function getPath(obj, path){ return path.split(".").reduce(function(o,k){ return o?o[k]:undefined; }, obj); }
+function recomputeScore(){
+  var st=Array.isArray(S.draft.stances)?S.draft.stances:[], locked=lockedStances(S.draft.safety);
+  var nums=st.map(function(x,k){ return (locked.indexOf(k)>=0)?null:(typeof x==="number"?x:null); });
+  var sc=calcScore(nums), flag=redFlagOf(S.draft.safety);
+  return {score:sc, band:bandOf(sc, flag), redFlag:flag};
+}
+function ensureFid(){
+  if(S.draft && S.draft.consent===true && !S.draft.fid && S.canWrite){ persistDraft({fid:makeFid()}); }
+}
+
+/* ---------- modal ---------- */
+function openModal(html){ var m=byId("modal"); m.innerHTML='<div class="dialog" role="dialog" aria-modal="true">'+html+'</div>'; m.hidden=false; var f=m.querySelector("input,select,button"); if(f) f.focus(); }
+function closeModal(){ byId("modal").hidden=true; byId("modal").innerHTML=""; }
+var bookingForm = null;
+function bookingModal(pref){
+  bookingForm = Object.assign({name:"",phone:"",date:S.date,time:SLOTS[0],who:"self",focus:[],source:"phone",memo:"",fid:null,walkin:false,channel:"",ctype:"new",lastScan:"",retPurpose:"regular",model:""}, pref||{});
+  var f=bookingForm;
+  openModal('<h2>'+(f.walkin?'예약 없이 오신 분':'예약 추가')+'</h2>' +
+    '<label class="field"><span>이름</span><input type="text" id="bfName" value="'+esc(f.name)+'"></label>' +
+    '<label class="field"><span>연락처</span><input type="tel" id="bfPhone" value="'+esc(f.phone)+'"></label>' +
+    (f.walkin?'':'<div class="tryrow" style="grid-template-columns:1fr 1fr"><label class="field" style="margin:0"><span>날짜</span><input type="date" id="bfDate" value="'+esc(f.date)+'"></label><label class="field" style="margin:0"><span>시간</span><select id="bfTime">'+SLOTS.map(function(s){return '<option'+(s===f.time?' selected':'')+'>'+s+'</option>';}).join("")+'</select></label></div>') +
+    '<div class="field"><span>고객 구분</span><div class="opts">'+[["new","처음 방문"],["returning","기존 고객 (착용 중)"]].map(function(c){return '<button class="opt" data-act="bf" data-f="ctype" data-v="'+c[0]+'" aria-pressed="'+(f.ctype===c[0])+'">'+c[1]+'</button>';}).join("")+'</div></div>' +
+    (f.ctype==="returning"?'<div class="tryrow" style="grid-template-columns:1fr 1fr"><label class="field" style="margin:0"><span>지난 스캔(또는 구매) 달</span><input type="month" id="bfLast" value="'+esc(f.lastScan)+'"></label><label class="field" style="margin:0"><span>착용 모델·사이즈</span><input type="text" id="bfModel" value="'+esc(f.model)+'"></label></div>'+
+      '<div class="field"><span>방문 목적</span><div class="opts">'+RET_PURPOSE.map(function(r){return '<button class="opt" data-act="bf" data-f="retPurpose" data-v="'+r[0]+'" aria-pressed="'+(f.retPurpose===r[0])+'">'+r[1]+'</button>';}).join("")+'</div></div>':'') +
+    '<div class="field"><span>오시는 분</span><div class="opts" id="bfWho">'+WHO.map(function(w){return '<button class="opt" data-act="bf" data-f="who" data-v="'+w[0]+'" aria-pressed="'+(f.who===w[0])+'">'+w[1]+'</button>';}).join("")+'</div></div>' +
+    '<div class="field"><span>보고 싶은 것 (선택)</span><div class="opts">'+FOCUS.map(function(x){return '<button class="opt" data-act="bf" data-f="focus" data-v="'+esc(x)+'" aria-pressed="'+(f.focus.indexOf(x)>=0)+'">'+esc(x)+'</button>';}).join("")+'</div></div>' +
+    (f.walkin?'':'<div class="field"><span>예약 경로</span><div class="opts">'+SOURCE.filter(function(s){return s[0]!=="walkin";}).map(function(s){return '<button class="opt" data-act="bf" data-f="source" data-v="'+s[0]+'" aria-pressed="'+(f.source===s[0])+'">'+s[1]+'</button>';}).join("")+'</div></div>') +
+    '<div class="field"><span>알게 된 경로</span><div class="opts">'+CHANNELS.map(function(c){return '<button class="opt" data-act="bf" data-f="channel" data-v="'+esc(c)+'" aria-pressed="'+(f.channel===c)+'">'+esc(c)+'</button>';}).join("")+'</div></div>' +
+    '<label class="field"><span>메모</span><input type="text" id="bfMemo" value="'+esc(f.memo)+'"></label>' +
+    '<p class="err small" id="bfErr" style="color:var(--refer);min-height:1.2em"></p>' +
+    '<div class="act"><button class="btn ghost" data-act="mclose">취소</button><button class="btn" data-act="bfSave">'+(f.walkin?'바로 점검 시작':'예약 저장')+'</button></div>');
+}
+function saveBooking(){
+  var f=bookingForm; f.name=byId("bfName").value.trim(); f.phone=byId("bfPhone").value.trim(); f.memo=byId("bfMemo").value.trim();
+  if(!f.walkin){ f.date=byId("bfDate").value||S.date; f.time=byId("bfTime").value; }
+  if(!f.name){ byId("bfErr").textContent="이름을 적어 주세요."; return; }
+  if(digits(f.phone).length<7){ byId("bfErr").textContent="연락처를 적어 주세요."; return; }
+  var id=newId(), now=new Date().toISOString();
+  var v={store:S.store, date:f.walkin?todayISO():f.date, time:f.walkin?nowHM():f.time, name:f.name, phone:f.phone, who:f.who, focus:f.focus.slice(), source:f.walkin?"walkin":f.source, memo:f.memo, channel:f.channel||null, status:f.walkin?"arrived":"booked", createdAt:now};
+  if(f.fid) v.fid=f.fid;
+  if(f.ctype==="returning"){ var lsEl=byId("bfLast"), mdEl=byId("bfModel"); f.lastScan=lsEl?lsEl.value:f.lastScan; f.model=mdEl?mdEl.value.trim():f.model; v.ctype="returning"; v.wearing=true; v.lastScan=f.lastScan||""; v.retPurpose=f.retPurpose; v.model=f.model||""; v.nextRegular=nextScanOf(f.lastScan); }
+  backend.write(id, v, true);
+  closeModal();
+  if(f.walkin){ S.date=todayISO(); openVisit(id,0); } else toast("예약을 저장했어요.");
+}
+var webRows=[];
+function existingBookingIds(){ var m={}; list().forEach(function(v){ if(v.web&&v.web.bookingId) m[v.web.bookingId]=1; }); return m; }
+function parseWeb(text){
+  var t=String(text||"").trim(), arr=[];
+  if(!t) return [];
+  try{ var j=JSON.parse(t); arr=Array.isArray(j)?j:(Array.isArray(j.bookings)?j.bookings:[j]); }
+  catch(e){ t.split(/\n+/).forEach(function(line){ line=line.trim(); if(!line) return; try{ arr.push(JSON.parse(line)); }catch(e2){} }); }
+  var seen=existingBookingIds();
+  return arr.filter(function(b){ return b && b.id && b.date && b.name; }).map(function(b){ return {b:b, dup:!!seen[b.id]}; });
+}
+function webImportModal(){
+  webRows=[];
+  openModal('<h2>웹 예약 가져오기</h2><p class="small">랜딩페이지 예약 기록(JSON)을 붙여 넣으세요. 예약 서버나 구글 시트에서 내보낸 내용을 그대로 붙이면 돼요. 이미 가져온 예약(같은 예약 번호)은 건너뛰어요.</p>'+
+    '<label class="field"><span>예약 기록</span><textarea id="wiText" rows="7" placeholder=\'{"id":"BK...","store":"ktown","date":"2026-10-20","time":"10:00","name":"..."}\'></textarea></label>'+
+    '<div id="wiPrev" class="small muted">붙여 넣으면 미리 보기가 나와요.</div>'+
+    '<div class="act"><button class="btn ghost" data-act="mclose">취소</button><button class="btn" data-act="wiSave" disabled id="wiSave">가져오기</button></div>');
+}
+function webPreview(){
+  webRows=parseWeb(byId("wiText").value);
+  var add=webRows.filter(function(r){ return !r.dup; });
+  byId("wiPrev").innerHTML = webRows.length ? ('<p><b>'+add.length+'건</b> 새로 가져와요'+(webRows.length-add.length?', '+(webRows.length-add.length)+'건은 이미 있어요':'')+'.</p><table class="sumtable"><tr><th>날짜</th><th>매장</th><th>이름</th><th>구분</th></tr>'+webRows.map(function(r){ var b=r.b; return '<tr'+(r.dup?' style="opacity:.5"':'')+'><td>'+esc(b.date)+' '+esc(b.time||"")+'</td><td>'+esc(storeName(b.store||S.store))+'</td><td>'+esc(b.name)+'</td><td>'+(b.ctype==="returning"?"기존 고객":"처음 방문")+(b.healthConsent&&b.selfcheck?" · 자가 점검":"")+(r.dup?" (이미 있음)":"")+'</td></tr>'; }).join("")+'</table>') : '읽을 수 있는 예약이 없어요. 형식을 확인해 주세요.';
+  byId("wiSave").disabled = !add.length;
+}
+function webSave(){
+  var add=webRows.filter(function(r){ return !r.dup; });
+  add.forEach(function(r){ backend.write(newId(), webToVisit(r.b), true); });
+  closeModal(); toast("웹 예약 "+add.length+"건을 가져왔어요.");
+}
+function cardHtml(d){
+  return '<div class="card" id="printCard"><div class="ch"><span class="zu">足 BioGround</span><span class="fid">'+esc(d.consent===false?"기록 저장 안 함":(d.fid||""))+'</span></div><div class="muted small">'+esc(d.name||"")+' 님, '+esc(kDateY(d.date))+'</div><div class="big">'+(d.score==null?"-":d.score)+'<span style="font-size:1rem;font-weight:500"> / 100 Balance Score</span></div><div style="font-family:var(--serif);font-size:1.2rem;margin-top:4px">'+esc(d.band?BANDS[d.band].ko+" ("+BANDS[d.band].en+")":"")+'</div><dl><dt>체중이 실리는 곳</dt><dd>'+esc(((d.pressure||{}).shift||[]).join(", ")||"-")+'</dd><dt>아치 부위</dt><dd>'+esc((d.pressure||{}).arch||"-")+'</dd><dt>다음 점검</dt><dd>'+esc(kDateY(addMonths(d.date, +(d.recheckMonths||4))))+' 무렵</dd></dl>'+(d.redFlag?'<p style="margin-top:12px"><b>족부 전문의나 주치의와 먼저 상담해 보세요.</b> 이 카드를 가져가시면 상담 때 도움이 돼요.</p>':'')+'<p class="disc">이 카드는 생활 속 움직임과 착화감을 살펴보는 웰니스 기록이며 의료 진단이 아닙니다. 자유로운 움직임은 발에서 시작됩니다.</p></div>';
+}
+
+/* ---------- render ---------- */
+function renderAll(){
+  renderTop();
+  var views={today:vToday, crm:vCrm, search:vSearch, follow:vFollow, kpi:vKpi, stores:vStores};
+  var active=document.activeElement, keepSearch = active && active.id==="searchIn" ? active.selectionStart : null;
+  byId("app").innerHTML = (views[S.tab]||vToday)();
+  if(keepSearch!=null){ var si=byId("searchIn"); if(si){ si.focus(); try{ si.setSelectionRange(keepSearch,keepSearch); }catch(e){} } }
+  if(S.openId) renderDrawer();
+}
+
+/* ---------- events ---------- */
+document.addEventListener("click", function(ev){
+  var el=ev.target.closest("[data-act]"); if(!el || el.disabled) return;
+  var a=el.dataset.act, id=el.dataset.id;
+  if(a==="store"){ S.store=el.dataset.v; try{ localStorage.setItem("lebal_dash_store",S.store); }catch(e){} renderAll(); }
+  else if(a==="dPrev"){ S.date=addDays(S.date,-1); renderAll(); }
+  else if(a==="dNext"){ S.date=addDays(S.date,1); renderAll(); }
+  else if(a==="dToday"){ S.date=todayISO(); renderAll(); }
+  else if(a==="tab"){ S.tab=el.dataset.v; renderAll(); }
+  else if(a==="period"){ S.kpiPeriod=el.dataset.v; renderAll(); }
+  else if(a==="arrive"){ backend.write(id,{status:"arrived",arrivedAt:new Date().toISOString()}); }
+  else if(a==="noshow"){ backend.write(id,{status:"noshow"}); }
+  else if(a==="restore"){ backend.write(id,{status:"booked"}); }
+  else if(a==="open"){ openVisit(id); }
+  else if(a==="close"){ closeVisit(); }
+  else if(a==="newBooking"){ bookingModal({date:S.date}); }
+  else if(a==="walkin"){ bookingModal({walkin:true}); }
+  else if(a==="rebook"){ var v=S.visits[id]; if(v) bookingModal({name:v.name,phone:v.phone,fid:v.fid||null,who:v.who||"self",date:addDays(todayISO(),1),memo:"재점검",channel:"기존 고객"}); }
+  else if(a==="bf" && el.dataset.f==="ctype"){ var bf=bookingForm; ["Name","Phone","Memo","Date","Time","Last","Model"].forEach(function(k){ var e=byId("bf"+k); if(e){ var key={Name:"name",Phone:"phone",Memo:"memo",Date:"date",Time:"time",Last:"lastScan",Model:"model"}[k]; bf[key]=e.value; } }); bf.ctype=el.dataset.v; bookingModal(bf); }
+  else if(a==="bf"){ var f=el.dataset.f, val=el.dataset.v; if(f==="focus"){ var i=bookingForm.focus.indexOf(val); if(i>=0) bookingForm.focus.splice(i,1); else bookingForm.focus.push(val); el.setAttribute("aria-pressed",String(i<0)); } else { bookingForm[f]=val; Array.prototype.forEach.call(el.parentElement.children,function(b){ b.setAttribute("aria-pressed",String(b===el)); }); } }
+  else if(a==="bfSave"){ saveBooking(); }
+  else if(a==="webImport"){ webImportModal(); }
+  else if(a==="wiSave"){ webSave(); }
+  else if(a==="mclose"){ closeModal(); }
+  else if(a==="clearDemo"){ list().filter(function(v){return v.demo;}).forEach(function(v){ backend.remove(v.id); }); toast("예시 데이터를 지웠어요."); }
+  else if(a==="fuDone"){
+    var v2=S.visits[id], k=el.dataset.kind;
+    if(k==="d7") backend.write(id,{d7:{done:true,doneAt:new Date().toISOString()}});
+    else if(k==="recheck") backend.write(id,{recheck:{done:true,doneAt:new Date().toISOString()}});
+    else if(k==="noshow") backend.write(id,{noshowCall:{count:((v2.noshowCall&&v2.noshowCall.count)||0)+1}});
+  }
+  else if(a==="storeNew"){ storeModal(null); }
+  else if(a==="storeEdit"){ storeModal(el.dataset.v); }
+  else if(a==="storeGo"){ S.store=el.dataset.v; try{ localStorage.setItem("lebal_dash_store",S.store); }catch(e){} S.tab="today"; renderAll(); }
+  else if(a==="sf"){ storeForm[el.dataset.f]=el.dataset.v; Array.prototype.forEach.call(el.parentElement.children,function(b){ b.setAttribute("aria-pressed",String(b===el)); }); }
+  else if(a==="sfSave"){ saveStoreForm(); }
+  else if(a==="importOne"){ importModal(el.dataset.v); }
+  else if(a==="impKind"){ readImportFields(); impForm.kind=el.dataset.v; renderImportModal(); }
+  else if(a==="impSet"){ readImportFields(); impForm[el.dataset.f]=el.dataset.v; if(el.dataset.f==="outcome"||el.dataset.f==="reason"){ renderImportModal(); } else Array.prototype.forEach.call(el.parentElement.children,function(b){ b.setAttribute("aria-pressed",String(b===el)); }); }
+  else if(a==="impSave"){ saveImport(!!el.dataset.more); }
+  else if(a==="importBulk"){ bulkModal(); }
+  else if(a==="bkCheck"){ bulkPreview(); }
+  else if(a==="bkSave"){ bulkSave(); }
+  else if(a==="fpView"){ var aid=el.dataset.aid, u="/_blob/"+aid; openModal((el.dataset.pdf==="1"?'<p><a class="btn" href="'+u+'" target="_blank" rel="noopener">PDF 열기</a></p>':'<img src="'+u+'" alt="족문지" style="width:100%;height:auto;border-radius:6px;display:block">')+'<div class="act"><a class="btn ghost" href="'+u+'" target="_blank" rel="noopener">새 창에서 보기</a><button class="btn" data-act="mclose">닫기</button></div>'); }
+  else if(a==="fpDel"){ var vid=el.dataset.vid, kk=+el.dataset.k; openModal('<h2>족문지를 삭제할까요?</h2><p>삭제하면 되돌릴 수 없어요.</p><div class="act"><button class="btn ghost" data-act="mclose">취소</button><button class="btn danger" data-act="fpDelOk" data-vid="'+esc(vid)+'" data-k="'+kk+'">삭제</button></div>'); }
+  else if(a==="fpDelOk"){ deleteFootprintAt(el.dataset.vid, +el.dataset.k); closeModal(); }
+  else if(a==="crmGroup"){ S.crmGroup=el.dataset.v; renderAll(); }
+  else if(a==="logContact"){ logContact(el.dataset.key, el.dataset.res); }
+  else if(a==="stopContact"){ backend.writePerson(el.dataset.key, {stop:true, stopAt:new Date().toISOString()}); toast("연락 중단을 기록했어요."); }
+  else if(a==="resumeContact"){ backend.writePerson(el.dataset.key, {stop:false}); }
+  else if(a==="famToggle" || a==="famPhone"){
+    var oid=el.dataset.oid;
+    if(a==="famPhone"){ var fp=digits((byId("famPhone")||{}).value); if(fp.length<7){ toast("연락처를 7자리 이상 적어 주세요."); return; }
+      var hit=list().filter(function(o){ return o.id!==S.openId && digits(o.phone)===fp; }).sort(function(x,y){ return String(y.date).localeCompare(String(x.date)); })[0];
+      if(!hit){ toast("그 연락처로 방문한 고객이 없어요."); return; } oid=hit.id; if((S.draft.familyIds||[]).indexOf(oid)>=0){ toast("이미 연결돼 있어요."); return; } }
+    var mineF=(S.draft.familyIds||[]).slice(), ix=mineF.indexOf(oid), other=S.visits[oid], theirs=((other&&other.familyIds)||[]).slice(), jx=theirs.indexOf(S.openId);
+    if(ix>=0){ mineF.splice(ix,1); if(jx>=0) theirs.splice(jx,1); } else { mineF.push(oid); if(jx<0) theirs.push(S.openId); }
+    persistDraft({familyIds:mineF}); if(other && S.canWrite) backend.write(oid, {familyIds:theirs});
+  }
+  else if(a==="step"){ S.step=+el.dataset.v; if(S.step===4) ensureFid(); renderDrawer(); var pb=byId("panelBody"); if(pb) pb.scrollTop=0; }
+  else if(a==="dset"){
+    var field=el.dataset.f, val2=el.dataset.v, multi=el.dataset.multi==="1", patch;
+    if(field==="consent"){ patch={consent: val2==="yes"}; if(val2==="no"){ deleteAllFootprints(S.draft); var clear={}; HEALTH_KEYS.forEach(function(k){ clear[k]=null; }); if(S.canWrite) backend.write(S.openId, clear); }
+      else if(S.draft.consent!==true){ var keep={}; HEALTH_KEYS.forEach(function(k){ if(S.draft[k]!=null) keep[k]=S.draft[k]; }); S.draft.consent=true; persistDraft(keep); } persistDraft(patch); return; }
+    if(field==="recheckMonths"){ persistDraft({recheckMonths:+val2}); return; }
+    if(field==="marketingConsent"){ persistDraft({marketingConsent: val2==="yes"}); return; }
+    if(multi){ var cur=(getPath(S.draft,field)||[]).slice(), j=cur.indexOf(val2); if(j>=0) cur.splice(j,1); else cur.push(val2); patch=setPath(S.draft, field, cur); }
+    else patch=setPath(S.draft, field, val2);
+    if(field==="outcome" && val2==="buy" && !(S.draft.purchase&&S.draft.purchase.model)){ var lt=(S.draft.tried||[]).slice(-1)[0]||{}; var m=MODELS.filter(function(x){return x[0]===lt.model;})[0]; patch.purchase={model:lt.model||"M808", size:lt.size||"8", price:m&&m[1]!=null?m[1]:null}; }
+    persistDraft(patch);
+  }
+  else if(a==="safety"){ var sp={safety:{}}; sp.safety[el.dataset.k]=el.dataset.v==="1"; S.draft=merge(S.draft,sp); var r=recomputeScore(); sp.redFlag=r.redFlag; sp.score=r.score; sp.band=r.band; persistDraft(sp); }
+  else if(a==="stance"){ var st=(Array.isArray(S.draft.stances)?S.draft.stances:[null,null,null,null,null]).slice(); var kv=+el.dataset.k; st[kv]= el.dataset.v==="skip" ? "skip" : +el.dataset.v; S.draft.stances=st; var r2=recomputeScore(); persistDraft({stances:st, score:r2.score, band:r2.band, redFlag:r2.redFlag}); }
+  else if(a==="adoptFid"){ persistDraft({fid:el.dataset.fid}); }
+  else if(a==="tryAdd"){ var tr=(S.draft.tried||[]).slice(); tr.push({model:"M808",size:"8",feel:""}); persistDraft({tried:tr}); }
+  else if(a==="tryDel"){ var tr2=(S.draft.tried||[]).slice(); tr2.splice(+el.dataset.k,1); persistDraft({tried:tr2}); }
+  else if(a==="card"){ openModal(cardHtml(S.draft)+'<div class="act"><button class="btn ghost" data-act="mclose">닫기</button><button class="btn" data-act="print">인쇄</button></div>'); }
+  else if(a==="print"){ try{ window.print(); }catch(e){ toast("이 화면에서는 인쇄할 수 없어요. 고객에게 화면을 보여 주세요."); } }
+  else if(a==="finish"){
+    var d=S.draft, fp={status:"done", doneAt:new Date().toISOString()};
+    if(d.outcome==="buy" && d.consent!==false) fp.d7={due:addDays(d.date,7), done:(d.d7&&d.d7.done)||false};
+    if(d.consent!==false) fp.recheck={due:addMonths(d.date, +(d.recheckMonths||5)), done:(d.recheck&&d.recheck.done)||false};
+    persistDraft(fp); toast("점검을 완료했어요."); closeVisit();
+  }
+});
+document.addEventListener("input", function(ev){
+  var t=ev.target;
+  if(t.id==="searchIn"){ S.search=t.value; renderAll(); return; }
+  if(t.id==="imPhone"){ updateDup(); return; }
+  if(t.id==="wiText"){ webPreview(); return; }
+  if(!S.openId) return;
+  if(t.dataset.dfield){ var f=t.dataset.dfield, val=t.value; S.draft=merge(S.draft, setPath(S.draft,f,val)); clearTimeout(noteTimer); noteTimer=setTimeout(function(){ persistDraft(setPath(S.draft,f,val)); }, 700); return; }
+  if(t.dataset.stance!=null){ var k=+t.dataset.stance, n=parseFloat(t.value); var st=(Array.isArray(S.draft.stances)?S.draft.stances:[null,null,null,null,null]).slice(); st[k]=isFinite(n)?Math.max(0,Math.min(10,n)):null; S.draft.stances=st; clearTimeout(noteTimer); noteTimer=setTimeout(function(){ var r=recomputeScore(); persistDraft({stances:st, score:r.score, band:r.band, redFlag:r.redFlag}); }, 600); return; }
+});
+document.addEventListener("change", function(ev){
+  var t=ev.target;
+  if(t.id==="storeSel"){ S.store=t.value; try{ localStorage.setItem("lebal_dash_store",S.store); }catch(e){} renderAll(); return; }
+  if(t.dataset && t.dataset.fpup){ var fl=t.files; if(fl && fl.length) uploadFootprints(t.dataset.fpup, fl); t.value=""; return; }
+  if(!S.openId) return;
+  if(t.dataset.try!=null){ var tr=(S.draft.tried||[]).slice(), k=+t.dataset.try; tr[k]=Object.assign({}, tr[k]); tr[k][t.dataset.tf]=t.value; persistDraft({tried:tr}); }
+  else if(t.dataset.pf){ var pu=Object.assign({}, S.draft.purchase||{}); var f=t.dataset.pf; pu[f]= f==="price" ? (t.value===""?null:+t.value) : t.value; if(f==="model"){ var m=MODELS.filter(function(x){return x[0]===t.value;})[0]; if(m&&m[1]!=null) pu.price=m[1]; } persistDraft({purchase:pu}); }
+  else if(t.dataset.dcheck){ var o={}; o[t.dataset.dcheck]=t.checked; persistDraft(o); }
+});
+document.addEventListener("keydown", function(ev){
+  if(ev.key==="Escape"){ if(!byId("modal").hidden) closeModal(); else if(S.openId) closeVisit(); }
+});
+
+backend.init();
+})();
+</script>
+</body>
+</html>

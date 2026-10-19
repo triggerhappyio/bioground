@@ -1,0 +1,23 @@
+/* Staff admin styles. The customer landing page is self-contained HTML in
+   public/bioground and does not use this file. */
+:root {
+  --ink: #15171c;
+  --white: #ffffff;
+  --paper: #f7f6f1;
+  --bone-dim: #dedad0;
+  --steel: #5a5d64;
+  --brass: #c8f03c; /* BioGround acid accent */
+  --font-display: "Hahmlet", Georgia, serif;
+  --font-body: "IBM Plex Sans KR", "IBM Plex Sans", -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink); font-family: var(--font-body); }
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--font-display); font-weight: 700; margin: 0; }
+.card { background: var(--white); border: 1px solid var(--bone-dim); border-radius: 8px; }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; border: 1.5px solid var(--ink); background: transparent; color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; text-decoration: none; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-brass { background: var(--ink); color: var(--white); }
+.btn-ghost { background: transparent; }
+input, select, textarea { font: inherit; border: 1px solid var(--bone-dim); border-radius: 6px; background: var(--white); }
+:focus-visible { outline: 3px solid var(--ink); outline-offset: 2px; }
