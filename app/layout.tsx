@@ -16,6 +16,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           href="https://fonts.googleapis.com/css2?family=Hahmlet:wght@500;700&family=IBM+Plex+Sans+KR:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap"
           rel="stylesheet"
         />
+        {/* Vercel Web Analytics + Speed Insights (enable both in the Vercel dashboard). */}
+        <script defer src="/_vercel/insights/script.js" />
+        <script defer src="/_vercel/speed-insights/script.js" />
       </head>
       <body>{children}</body>
     </html>

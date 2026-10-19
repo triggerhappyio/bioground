@@ -93,8 +93,43 @@ export async function checkRateLimit(key: string, limit: number, windowMs: numbe
   return memoryRateLimit(`${scope}:${key}`, limit, windowMs);
 }
 
-export function clientKeyFrom(req: Request, scope: string): string {
+/**
+ * Read-only check: is `key` already at its limit? Does not consume a token.
+ * Used where only failures should count (staff sign-in): peek before the
+ * attempt, consume with checkRateLimit() only when the attempt fails.
+ */
+export async function peekRateLimit(key: string, limit: number, windowMs: number, scope = "default"): Promise<Limiter> {
+  const upstash = getUpstashLimiter(scope, limit, windowMs);
+  if (upstash) {
+    const { remaining, reset } = await upstash.getRemaining(key);
+    return remaining > 0 ? { allowed: true } : { allowed: false, retryAfterMs: Math.max(0, reset - Date.now()) };
+  }
+  const bucket = memoryBuckets.get(`${scope}:${key}`);
+  const now = Date.now();
+  if (!bucket || bucket.resetAt <= now || bucket.count < limit) return { allowed: true };
+  return { allowed: false, retryAfterMs: bucket.resetAt - now };
+}
+
+/** Clears the counter for `key` (e.g. after a successful sign-in). */
+export async function resetRateLimit(key: string, limit: number, windowMs: number, scope = "default"): Promise<void> {
+  const upstash = getUpstashLimiter(scope, limit, windowMs);
+  if (upstash) {
+    await upstash.resetUsedTokens(key);
+    return;
+  }
+  memoryBuckets.delete(`${scope}:${key}`);
+}
+
+/**
+ * Client IP for rate-limit keys. On Vercel, x-forwarded-for is set by the
+ * platform (a client-supplied value is overwritten), first entry = client.
+ */
+export function clientIpFrom(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
-  const ip = forwarded ? forwarded.split(",")[0].trim() : "unknown";
-  return `${scope}:${ip}`;
+  const ip = forwarded ? forwarded.split(",")[0].trim() : req.headers.get("x-real-ip")?.trim();
+  return ip || "unknown";
+}
+
+export function clientKeyFrom(req: Request, scope: string): string {
+  return `${scope}:${clientIpFrom(req)}`;
 }

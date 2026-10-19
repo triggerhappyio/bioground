@@ -65,12 +65,42 @@ landing page's `STORES` list.
 ## Updating the landing page
 
 The page is designed and reviewed as a claude.ai artifact, then copied here.
-To update: replace `public/bioground/index.html` with the new version and
-make sure it still says `var BOOKING_ENDPOINT = "/api/bookings";` (the
-artifact copy has it empty, which keeps bookings in the browser only). With
-the endpoint set, the page hides its "demo" notes, waits for the server,
+`/` is served by `app/route.ts`, which reads `public/bioground/index.html`
+and replaces `__SITE_URL__` (canonical, `og:url`, `og:image`) with
+`NEXT_PUBLIC_APP_URL`, else the Vercel production domain. To update:
+
+1. Replace `public/bioground/index.html` with the new version. Keep the
+   `<head>` block from the current file (social tags, canonical, fonts,
+   Vercel Analytics / Speed Insights scripts) and make sure it still says
+   `var BOOKING_ENDPOINT = "/api/bookings";` (the artifact copy has it empty,
+   which keeps bookings in the browser only).
+2. Re-bake the crawler copy: `node scripts/prerender-landing.mjs` (needs
+   `npm i --no-save playwright && npx playwright install chromium` once).
+   It renders the default Korean first screen into the HTML so KakaoTalk,
+   Naver and iMessage previews see real text; the page script replaces it on
+   load.
+3. If the headline changes, update `scripts/og-image.html` and re-export
+   `public/og/bioground-og.png` (1200×630).
+
+With the endpoint set, the page hides its "demo" notes, waits for the server,
 shows the server's `BK-` code, and shows translated errors for a full slot,
-a passed time, or a network failure.
+a passed time, or a network failure. Chinese fonts load only when Chinese is
+selected (`ensureFonts`).
+
+## Security
+
+- **Headers** (all routes, `next.config.js`): CSP (`frame-ancestors 'none'`;
+  scripts/styles `'self' 'unsafe-inline'`; Google Fonts; Vercel Analytics),
+  HSTS (2 years, includeSubDomains, preload), `X-Frame-Options: DENY`,
+  `nosniff`, `strict-origin-when-cross-origin`, and a Permissions-Policy that
+  turns off camera, microphone and location.
+- **Staff sign-in** (`lib/login-guard.ts`): 5 failed attempts per IP + email
+  and 30 per IP within 15 minutes, then HTTP 429 and a "sign-in paused"
+  message until the window passes. A successful sign-in clears the IP +
+  email counter. Uses the same Upstash limiter as bookings (fails closed in
+  production without it).
+- **Email alert health:** the admin shows a banner when `RESEND_API_KEY`,
+  `EMAIL_FROM` or `BOOKING_NOTIFY_EMAIL` is missing.
 
 ## Not built yet
 
@@ -84,6 +114,6 @@ a passed time, or a network failure.
 - **Footprint images and the full visit record.** The claude.ai store
   dashboard (`artifacts/store-dashboard.html`) records balance scores,
   footprint photos, and purchases; this admin records bookings only.
-- **Staff management UI.** Staff logins are created with
-  `npm run staff:create`.
+- **Staff management UI.** Staff logins are created (and passwords reset)
+  with `npm run staff:create`.
 - **Per-store hours and holidays.** All stores share `BOOKING_SLOTS`.

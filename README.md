@@ -19,9 +19,11 @@ Customer ─▶ /  (public/bioground/index.html — Korean, English, Spanish, Vi
 
 | Path | What it is |
 |---|---|
-| `public/bioground/index.html` | The customer landing page (single file, 5 languages). Brunson-style funnel, Hormozi-style offer, objective self-check (wet footprint test, Manchester Scale, heel alignment, single-leg heel raise, CDC 4-stage balance), new **and** returning-customer booking, separate health-data consent. |
+| `app/route.ts` + `public/bioground/index.html` | The customer landing page (single file, 5 languages), served at `/` with canonical/Open Graph URLs filled in. Default Korean copy is pre-rendered for crawlers (`scripts/prerender-landing.mjs`); share image `public/og/bioground-og.png`. Brunson-style funnel, Hormozi-style offer, objective self-check (wet footprint test, Manchester Scale, heel alignment, single-leg heel raise, CDC 4-stage balance), new **and** returning-customer booking, separate health-data consent. |
 | `app/api/bookings/route.ts` | Public booking endpoint: idempotent, slot capacity under concurrency, rate-limited, Origin allowlist, consent-gated health data. |
-| `app/admin/` | Staff sign-in and the bookings admin. |
+| `app/admin/` | Staff sign-in (failed attempts rate-limited) and the bookings admin. |
+| `next.config.js` | Security headers (CSP, HSTS, frame, referrer, permissions) for every route. |
+| `app/robots.ts`, `app/sitemap.ts` | Crawl rules (no `/admin`, `/api`) and the sitemap. |
 | `lib/bookings.ts` | The single definition of a valid booking, stores, time slots, the 5-month rescan rule, and the export format. |
 | `prisma/` | `Booking` and `StaffUser` tables + migration. |
 | `artifacts/` | Source of the two claude.ai artifacts this site came from: the landing page (bookings stay in the browser) and the store visit dashboard (balance test, footprints, purchases, CRM). |

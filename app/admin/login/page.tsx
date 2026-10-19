@@ -17,6 +17,10 @@ export default function AdminLoginPage() {
     setError(null);
     const res = await signIn("credentials", { email, password, redirect: false });
     setLoading(false);
+    if (res?.code === "rate_limited" || res?.status === 429) {
+      setError("Too many failed sign-in attempts. For your security, sign-in is paused for up to 15 minutes. Try again later or ask an admin to reset your password.");
+      return;
+    }
     if (res?.error) {
       setError("Invalid email or password.");
       return;

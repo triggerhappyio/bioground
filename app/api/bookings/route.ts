@@ -17,6 +17,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { checkRateLimit, clientKeyFrom, assertRateLimiterConfigured } from "@/lib/rate-limit";
+import { siteUrl } from "@/lib/site";
 import { sendEmail, bookingStaffNotificationEmail } from "@/lib/email";
 import {
   BOOKING_STORES,
@@ -159,9 +160,7 @@ export async function POST(req: NextRequest) {
   // never turn a saved booking into an error for the customer.
   const notifyTo = process.env.BOOKING_NOTIFY_EMAIL;
   if (notifyTo) {
-    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ||
-      (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "") ||
-      new URL(req.url).origin).replace(/\/$/, "");
+    const appUrl = siteUrl(new URL(req.url).origin);
     const result = await sendEmail(
       bookingStaffNotificationEmail({
         to: notifyTo,

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth, signOut, STAFF_ROLES } from "@/lib/auth";
+import { emailAlertStatus } from "@/lib/notify-health";
 
 // Second, server-side gate (proxy.ts is the first): runs on every admin
 // request with a real session check, so it holds even if proxy config drifts.
@@ -10,6 +11,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session?.user || !role || !STAFF_ROLES.includes(role)) {
     redirect("/admin/login");
   }
+  const alerts = emailAlertStatus();
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", flexWrap: "wrap" }}>
@@ -40,7 +42,44 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </button>
         </form>
       </aside>
-      <div style={{ flex: 1, background: "var(--white)", minWidth: 0 }}>{children}</div>
+      <div style={{ flex: 1, background: "var(--white)", minWidth: 0 }}>
+        {!alerts.active && (
+          <div
+            role="status"
+            style={{
+              display: "flex",
+              gap: 10,
+              alignItems: "flex-start",
+              margin: "16px 24px 0",
+              padding: "10px 14px",
+              borderRadius: 6,
+              border: "1px solid #E6C27A",
+              background: "#FFF7E6",
+              color: "#5C4300",
+              fontSize: 13,
+              lineHeight: 1.5
+            }}
+          >
+            <span aria-hidden="true">⚠</span>
+            <span>
+              <b>New-booking email alerts are off.</b> Bookings are still saving normally — check this page for new ones.
+              {role === "ADMIN" && (
+                <>
+                  {" "}
+                  To turn alerts on, set {alerts.missing.map((k, i) => (
+                    <span key={k}>
+                      {i > 0 ? ", " : ""}
+                      <code>{k}</code>
+                    </span>
+                  ))}{" "}
+                  in Vercel and redeploy.
+                </>
+              )}
+            </span>
+          </div>
+        )}
+        {children}
+      </div>
     </div>
   );
 }
