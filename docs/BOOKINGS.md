@@ -93,7 +93,8 @@ selected (`ensureFonts`).
   scripts/styles `'self' 'unsafe-inline'`; Google Fonts; Vercel Analytics),
   HSTS (2 years, includeSubDomains, preload), `X-Frame-Options: DENY`,
   `nosniff`, `strict-origin-when-cross-origin`, and a Permissions-Policy that
-  turns off camera, microphone and location.
+  turns off camera, microphone, location and ad-topic tracking
+  (`browsing-topics`, the successor of the retired `interest-cohort`).
 - **Staff sign-in** (`lib/login-guard.ts`): 5 failed attempts per IP + email
   and 30 per IP within 15 minutes, then HTTP 429 and a "sign-in paused"
   message until the window passes. A successful sign-in clears the IP +
