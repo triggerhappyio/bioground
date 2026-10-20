@@ -543,8 +543,8 @@ var BOOKING_ENDPOINT = "/api/bookings";
 function postBooking(bk){
   try{
     return fetch(BOOKING_ENDPOINT,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(bk)})
-      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok, code:j&&j.code, slot:r.status===409, time:!!(j&&(j.field==="time"||j.field==="date"))}; }); })
-      .catch(function(){ return {ok:false}; });
+      .then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok:r.ok, code:j&&j.code, status:r.status, slot:r.status===409, time:!!(j&&(j.field==="time"||j.field==="date"))}; }); })
+      .catch(function(){ return {ok:false, code:"network"}; });
   }catch(e){ return Promise.resolve({ok:false}); }
 }
 function scSummary(){ var sc=SC(); if(!sc) return null; var f=scFlags(), lv={}, flagged=0, maxL=-1;
@@ -696,7 +696,8 @@ function submit(){
     S.sending=false;
     if(res.ok){ if(res.code) bk.serverCode=res.code; finish(); return; }
     if(btn){ btn.disabled=false; btn.textContent=label; }
-    var e2=byId("err"); if(e2) e2.textContent = res.slot?tx("errSlot"):(res.time?tx("errTime"):tx("errSend"));
+    /* Generic failures carry a short reference (e.g. "server_config · 503") so staff can tell what went wrong. */
+    var e2=byId("err"); if(e2) e2.textContent = res.slot?tx("errSlot"):(res.time?tx("errTime"):tx("errSend")+" ("+[res.code||"error",res.status].filter(Boolean).join(" · ")+")");
   });
 }
 

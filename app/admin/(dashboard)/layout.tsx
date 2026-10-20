@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth, signOut, STAFF_ROLES } from "@/lib/auth";
 import { emailAlertStatus } from "@/lib/notify-health";
+import { rateLimiterConfigured } from "@/lib/rate-limit";
 
 // Second, server-side gate (proxy.ts is the first): runs on every admin
 // request with a real session check, so it holds even if proxy config drifts.
@@ -12,6 +13,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     redirect("/admin/login");
   }
   const alerts = emailAlertStatus();
+  // Without the rate limiter the public booking API refuses every booking
+  // in production (fail closed) — staff must know immediately.
+  const bookingOff = process.env.NODE_ENV === "production" && !rateLimiterConfigured();
 
   return (
     <div style={{ display: "flex", minHeight: "100vh", flexWrap: "wrap" }}>
@@ -43,6 +47,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </form>
       </aside>
       <div style={{ flex: 1, background: "var(--white)", minWidth: 0 }}>
+        {bookingOff && (
+          <div
+            role="alert"
+            style={{
+              margin: "16px 24px 0",
+              padding: "10px 14px",
+              borderRadius: 6,
+              border: "1px solid #E3A08F",
+              background: "#FDECE8",
+              color: "#7A2412",
+              fontSize: 13,
+              lineHeight: 1.5
+            }}
+          >
+            <b>Online booking is OFF.</b> The website is refusing new bookings because rate limiting (Upstash Redis) is not
+            connected to this deployment. Connect Upstash in Vercel → Storage, then redeploy. Phone and walk-in bookings below still work.
+          </div>
+        )}
         {!alerts.active && (
           <div
             role="status"

@@ -38,6 +38,11 @@ function originAllowed(req: NextRequest): { ok: boolean; origin: string | null }
   if (!origin) return { ok: true, origin: null };
   const self = new URL(req.url).origin;
   if (origin === self) return { ok: true, origin };
+  // Same site as the request's own host (behind a proxy req.url can carry an
+  // internal host). A browser always sets Host to the site it is calling, so
+  // a cross-site page cannot spoof this.
+  const host = req.headers.get("x-forwarded-host") || req.headers.get("host");
+  if (host && (origin === `https://${host}` || origin === `http://${host}`)) return { ok: true, origin };
   return { ok: allowedOrigins().includes(origin), origin };
 }
 
@@ -66,11 +71,35 @@ class SlotFullError extends Error {}
 
 export async function POST(req: NextRequest) {
   const { ok: originOk, origin } = originAllowed(req);
-  if (!originOk) return NextResponse.json({ error: "Origin not allowed." }, { status: 403 });
+  if (!originOk) {
+    console.warn("[bookings] origin rejected", { origin, url: req.url, host: req.headers.get("host") });
+    return NextResponse.json({ error: "Origin not allowed.", code: "origin_rejected" }, { status: 403 });
+  }
+  try {
+    return await createBooking(req, origin);
+  } catch (err) {
+    // Never answer with a bare 500 page: the landing page shows the code.
+    console.error("[bookings] unexpected failure", err);
+    return json({ error: "Could not save your booking. Please try again or call the store.", code: "server_error" }, 500, origin);
+  }
+}
 
-  assertRateLimiterConfigured();
-  const rateLimit = await checkRateLimit(clientKeyFrom(req, "booking"), 10, 60 * 60 * 1000, "booking"); // 10/hour/IP
-  if (!rateLimit.allowed) return json({ error: "Too many booking attempts. Please call the store." }, 429, origin);
+async function createBooking(req: NextRequest, origin: string | null): Promise<NextResponse> {
+  try {
+    assertRateLimiterConfigured();
+  } catch (err) {
+    console.error("[bookings] refusing bookings:", (err as Error).message);
+    return json({ error: "Online booking is temporarily unavailable. Please call the store.", code: "server_config" }, 503, origin);
+  }
+  let rateLimit: { allowed: boolean } = { allowed: true };
+  try {
+    rateLimit = await checkRateLimit(clientKeyFrom(req, "booking"), 10, 60 * 60 * 1000, "booking"); // 10/hour/IP
+  } catch (err) {
+    // Redis outage: take the booking (origin check, honeypot and body cap
+    // still apply) rather than lose a customer. Logged for follow-up.
+    console.error("[bookings] rate limiter unavailable, allowing request", err);
+  }
+  if (!rateLimit.allowed) return json({ error: "Too many booking attempts. Please call the store.", code: "rate_limited" }, 429, origin);
 
   // The landing page sends text/plain (a CORS "simple request", so no
   // preflight); application/json works too. Parse the raw text either way.
@@ -151,10 +180,10 @@ export async function POST(req: NextRequest) {
         continue; // booking-code collision: retry with a fresh code
       }
       console.error("[bookings] create failed", err);
-      return json({ error: "Could not save your booking. Please try again or call the store." }, 500, origin);
+      return json({ error: "Could not save your booking. Please try again or call the store.", code: "db_error" }, 500, origin);
     }
   }
-  if (!created) return json({ error: "Could not save your booking. Please try again." }, 500, origin);
+  if (!created) return json({ error: "Could not save your booking. Please try again.", code: "db_error" }, 500, origin);
 
   // Best-effort staff alert, after the row is committed. A mail failure must
   // never turn a saved booking into an error for the customer.

@@ -62,6 +62,26 @@ Stores and time slots live in `lib/bookings.ts` (`BOOKING_STORES`,
 `BOOKING_SLOTS`). Adding a franchise store = one entry there plus the
 landing page's `STORES` list.
 
+## When a booking fails
+
+- **`GET /api/health`** shows whether this deployment can take bookings:
+  database reachable, `Booking` table present, rate limiter (Upstash)
+  connected, email alerts on, and the deployed commit. 200 = bookings work,
+  503 = they don't (the JSON says why). No secrets or customer data.
+- The landing page's error message ends with a short reference such as
+  `(server_config · 503)`:
+
+| Reference | Meaning | Fix |
+|---|---|---|
+| `server_config` | Upstash Redis is not connected to this deployment, so bookings are refused (fail closed) | Vercel → Storage → connect Upstash → redeploy |
+| `db_error` / `server_error` | Database write failed | Check `/api/health` and Vercel → Logs (`[bookings]` lines) |
+| `origin_rejected` | Page served from a domain not allowed to post | Add it to `BOOKING_ALLOWED_ORIGINS` |
+| `rate_limited` | 10 bookings/hour from one IP | Wait, or book by phone |
+| `network` | The request never reached the server | Connection problem on the visitor's side |
+
+The admin shows a red "Online booking is OFF" banner when the rate limiter
+is missing in production.
+
 ## Updating the landing page
 
 The page is designed and reviewed as a claude.ai artifact, then copied here.

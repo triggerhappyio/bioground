@@ -63,6 +63,11 @@ function getUpstashLimiter(scope: string, limit: number, windowMs: number): Rate
   return limiter;
 }
 
+/** True when Upstash (or Vercel's KV_* integration variables) is set. */
+export function rateLimiterConfigured(): boolean {
+  return getRedis() !== null;
+}
+
 /**
  * Production fails closed: if Redis isn't configured in a production
  * deployment, this throws rather than silently limiting per-process
